@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "c:\\Users\\Administrator\\Desktop\\SJKM Network and Data Solutions\\logs\\.0eab487beb064fdcb873345ef94b247092204a64-audit.json",
+    "files": [
+        {
+            "date": 1785939958229,
+            "name": "c:\\Users\\Administrator\\Desktop\\SJKM Network and Data Solutions\\logs\\error-2026-08-05.log",
+            "hash": "710424854bfac8cf1ad8c379534b4d97dfbddc0bdba8f87788c5c0a88b453a4f"
+        },
+        {
+            "date": 1786074386432,
+            "name": "c:\\Users\\Administrator\\Desktop\\SJKM Network and Data Solutions\\logs\\error-2026-08-07.log",
+            "hash": "406914ce3dd1ad34c4d0ecffc5293ffc3f0d8e11a4c0e1b0926aa3b0b36ade51"
+        }
+    ],
+    "hashType": "sha256"
+}

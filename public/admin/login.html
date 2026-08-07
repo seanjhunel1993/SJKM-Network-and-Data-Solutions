@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | JKL FIBER Monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script>
+    // Critical Pre-render Branding
+    (function() {
+      const cachedBrand = localStorage.getItem('isp_brand_name');
+      const cachedLogo = localStorage.getItem('isp_brand_logo');
+      if (cachedBrand || cachedLogo) {
+        const style = document.createElement('style');
+        style.innerHTML = '.logo-flicker-fix { opacity: 0; }';
+        document.head.appendChild(style);
+      }
+    })();
+  </script>
+</head>
+<body class="login-page">
+  <div class="login-container">
+    <div class="login-glow"></div>
+    <div class="login-card">
+      <div class="login-header" style="text-align: center; margin-bottom: 25px;">
+<div class="sidebar-brand" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+          <div class="login-logo" id="loginLogo" style="margin-bottom: 12px;">
+            <img src="/uploads/branding/logo.png" alt="SJKM NETWORK DATA LINK Logo" style="max-height:90px; max-width:220px; object-fit:contain; border-radius:10px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));">
+          </div>
+          <div class="brand-main" id="sidebarBrandName" style="font-size: 2.2rem; letter-spacing: 1px; white-space: normal; line-height: 1.2; background: linear-gradient(135deg, #ffffff 0%, #93c5fd 60%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); font-weight: 900; word-break: break-word; width: 100%;">SJKM NETWORK DATA LINK</div>
+          <div class="brand-sub" id="sidebarBrandSub" style="font-size: 0.85rem; color: #60a5fa; border-bottom: 2px solid #3b82f6; padding-bottom: 4px; margin-top: 4px; font-weight: 800; display: block; width: fit-content; margin-left: auto; margin-right: auto;">NETWORK AND DATA SOLUTION</div>
+          <div class="brand-tagline" style="font-size: 0.75rem; margin-top: 12px; opacity: 0.8; color: #fff; font-weight: 700; letter-spacing: 1px;">ADMIN MONITORING</div>
+        </div>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter password" required autocomplete="current-password">
+        </div>
+        <div id="loginError" class="error-msg" style="display:none"></div>
+        <button type="submit" class="btn-primary btn-full" id="loginBtn">
+          <span>Sign In</span>
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z"/></svg>
+        </button>
+        <div style="text-align: right; margin-top: 12px;">
+          <a href="#" id="forgotPasswordLink" style="color: var(--text-secondary); font-size: 0.85rem; text-decoration: none;">Forgot password?</a>
+        </div>
+      </form>
+
+      <div id="forgotPasswordSection" style="display:none;">
+        <div id="resetStep1">
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; text-align: center;">Enter your registered email to receive an OTP.</p>
+          <div class="form-group">
+            <label for="resetEmail">Registered Email</label>
+            <input type="email" id="resetEmail" placeholder="example@gmail.com">
+          </div>
+          <button type="button" class="btn-primary btn-full" id="btnReqResetOtp">Send OTP</button>
+        </div>
+
+        <div id="resetStep2" style="display:none;">
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; text-align: center;">Enter the 6-digit OTP sent to your email.</p>
+          <div class="form-group">
+            <label for="resetOtp">OTP Code</label>
+            <input type="text" id="resetOtp" placeholder="123456" maxlength="6">
+          </div>
+          <button type="button" class="btn-primary btn-full" id="btnVerifyResetOtp">Verify OTP</button>
+        </div>
+
+        <div id="resetStep3" style="display:none;">
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; text-align: center;">Create a new secure password.</p>
+          <div class="form-group">
+            <label for="newResetPass">New Password</label>
+            <input type="password" id="newResetPass" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label for="confirmResetPass">Confirm New Password</label>
+            <input type="password" id="confirmResetPass" placeholder="••••••••">
+          </div>
+          <button type="button" class="btn-primary btn-full" id="btnConfirmReset">Reset Password</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+          <a href="#" id="backToLogin" style="color: var(--accent); font-size: 0.85rem; text-decoration: none; font-weight: 500;">← Back to Login</a>
+        </div>
+      </div>
+
+      <div id="twoFactorSection" style="display:none;">
+        <div class="login-header" style="margin-bottom: 24px;">
+          <div style="background: var(--accent-light); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; color: var(--accent);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <h2 style="font-size: 1.25rem; margin-bottom: 4px;">Security Check</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom:4px;">Enter the code sent to your Gmail:</p>
+          <div id="maskedEmailDisplay" style="font-size: 0.8rem; font-weight: 700; color: var(--accent); font-family: monospace;">---</div>
+        </div>
+        
+        <form id="twoFactorForm">
+          <div class="form-group">
+            <input type="text" id="twoFactorCode" placeholder="000 000" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 8px; font-weight: 700; font-family: 'JetBrains Mono', monospace;" required>
+          </div>
+          
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 20px; font-size: 0.85rem; color: var(--text-secondary);">
+            <input type="checkbox" id="trustDevice" style="width: 16px; height: 16px; accent-color: var(--accent);">
+            Trust this device for 30 days
+          </label>
+
+          <button type="submit" class="btn-primary btn-full" id="verifyBtn">
+            Verify & Sign In
+          </button>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="#" id="backFrom2FA" style="color: var(--text-dim); font-size: 0.85rem; text-decoration: none;">← Back to login</a>
+          </div>
+        </form>
+      </div>
+
+      <div class="login-footer">
+        <!-- Customer Portal Link Removed -->
+      </div>
+    </div>
+  </div>
+  <script>
+    // Dynamic Branding
+    (async () => {
+      const applyBranding = (name, logoUrl) => {
+        if (name) {
+          const brandTextEl = document.getElementById('brandText') || document.getElementById('sidebarBrandName');
+          if (brandTextEl) {
+            brandTextEl.textContent = name;
+            // Dynamically scale font size to keep layout clean and user friendly
+            if (name.length > 20) {
+              brandTextEl.style.fontSize = '1.4rem';
+            } else if (name.length > 15) {
+              brandTextEl.style.fontSize = '1.7rem';
+            } else if (name.length > 12) {
+              brandTextEl.style.fontSize = '2.0rem';
+            } else {
+              brandTextEl.style.fontSize = '2.2rem';
+            }
+          }
+          const brandSubEl = document.getElementById('sidebarBrandSub');
+          if (brandSubEl) {
+            if (name.toUpperCase().includes('SJKM NETWORK DATA LINK')) {
+              brandSubEl.textContent = 'NETWORK AND DATA SOLUTION';
+              brandSubEl.style.display = 'block';
+            } else {
+              brandSubEl.textContent = '';
+              brandSubEl.style.display = 'none';
+            }
+          }
+          document.title = 'Admin Login | ' + name + ' Monitoring';
+        }
+        if (logoUrl) {
+          const logoContainer = document.querySelector('.login-logo');
+          if (logoContainer) {
+            logoContainer.innerHTML = `<img src="${logoUrl}" alt="Logo">`;
+          }
+        }
+        // Reveal with transition
+        document.querySelectorAll('.logo-flicker-fix').forEach(el => el.classList.add('branding-ready'));
+      };
+
+      // Apply initial from cache
+      const cachedBrand = localStorage.getItem('isp_brand_name');
+      const cachedLogo = localStorage.getItem('isp_brand_logo');
+      if (cachedBrand || cachedLogo) {
+        applyBranding(cachedBrand, cachedLogo);
+      }
+
+      try {
+        const r = await fetch('/api/public/branding');
+        const b = await r.json();
+        
+        localStorage.setItem('isp_brand_name', b.company_name || '');
+        localStorage.setItem('isp_brand_logo', b.hero_logo_url || '');
+
+        applyBranding(b.company_name, b.hero_logo_url);
+      } catch(e) {
+        // If API fails, reveal whatever we have
+        document.querySelectorAll('.logo-flicker-fix').forEach(el => el.classList.add('branding-ready'));
+      }
+    })();
+
+    const loginForm = document.getElementById('loginForm');
+    const twoFactorSection = document.getElementById('twoFactorSection');
+    const forgotSection = document.getElementById('forgotPasswordSection');
+    const loginError = document.getElementById('loginError');
+
+    document.getElementById('forgotPasswordLink').onclick = (e) => {
+      e.preventDefault();
+      loginForm.style.display = 'none';
+      forgotSection.style.display = 'block';
+      loginError.style.display = 'none';
+    };
+
+    document.getElementById('backToLogin').onclick = (e) => {
+      e.preventDefault();
+      forgotSection.style.display = 'none';
+      loginForm.style.display = 'block';
+      loginError.style.display = 'none';
+    };
+
+    document.getElementById('backFrom2FA').onclick = (e) => {
+      e.preventDefault();
+      twoFactorSection.style.display = 'none';
+      loginForm.style.display = 'block';
+    };
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      btn.classList.add('loading');
+      loginError.style.display = 'none';
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = 'network-map.html';
+        } else if (data.require2FA) {
+          // 🛡️ Trigger 2nd Step
+          loginForm.style.display = 'none';
+          twoFactorSection.style.display = 'block';
+          document.getElementById('twoFactorCode').focus();
+          
+          // Show where we sent it
+          const mDisplay = document.getElementById('maskedEmailDisplay');
+          if (mDisplay) mDisplay.textContent = data.emailMasked || 'your registered email';
+        } else {
+          loginError.textContent = data.error || 'Invalid credentials';
+          loginError.style.display = 'block';
+        }
+      } catch (ex) {
+        loginError.textContent = 'Connection error. Is the server running?';
+        loginError.style.display = 'block';
+      }
+      btn.classList.remove('loading');
+    });
+
+    const twoFactorForm = document.getElementById('twoFactorForm');
+    twoFactorForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('verifyBtn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+
+      try {
+        const res = await fetch('/api/admin/2fa/verify-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: document.getElementById('twoFactorCode').value,
+            trustDevice: document.getElementById('trustDevice').checked
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = 'network-map.html';
+        } else {
+          alert('Error: ' + (data.error || 'Invalid security code'));
+        }
+      } catch (err) { alert('Network error'); }
+      btn.disabled = false;
+      btn.textContent = 'Verify & Sign In';
+    });
+
+    // Reset Flow JS
+    const step1 = document.getElementById('resetStep1');
+    const step2 = document.getElementById('resetStep2');
+    const step3 = document.getElementById('resetStep3');
+
+    document.getElementById('btnReqResetOtp').onclick = async () => {
+      const email = document.getElementById('resetEmail').value;
+      if (!email) return alert('Enter your email');
+      
+      const btn = document.getElementById('btnReqResetOtp');
+      btn.disabled = true; btn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch('/api/admin/forgot-password/request-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.success) {
+          step1.style.display = 'none';
+          step2.style.display = 'block';
+          if (data.devMode) {
+             const p = step2.querySelector('p');
+             p.textContent = 'DEV MODE: Check your terminal for OTP code!';
+             p.style.color = '#f59e0b';
+          }
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) { alert('Network error'); }
+      btn.disabled = false; btn.textContent = 'Send OTP';
+    };
+
+    document.getElementById('btnVerifyResetOtp').onclick = async () => {
+      const otp = document.getElementById('resetOtp').value;
+      const email = document.getElementById('resetEmail').value;
+      if (!otp) return alert('Enter OTP');
+
+      try {
+        const res = await fetch('/api/admin/forgot-password/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp })
+        });
+        const data = await res.json();
+        if (data.success) {
+          step2.style.display = 'none';
+          step3.style.display = 'block';
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) { alert('Network error'); }
+    };
+
+    document.getElementById('btnConfirmReset').onclick = async () => {
+      const email = document.getElementById('resetEmail').value;
+      const otp = document.getElementById('resetOtp').value;
+      const pass1 = document.getElementById('newResetPass').value;
+      const pass2 = document.getElementById('confirmResetPass').value;
+
+      if (!pass1 || pass1 !== pass2) return alert('Passwords do not match');
+
+      try {
+        const res = await fetch('/api/admin/forgot-password/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp, new_password: pass1 })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Password reset successful! You can now log in.');
+          location.reload();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) { alert('Network error'); }
+    };
+  </script>
+</body>
+</html>

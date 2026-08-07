@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>License Error — ISP Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --danger: #ef4444;
+      --text: #0f172a;
+      --bg: #f8fafc;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .error-card {
+      background: white;
+      padding: 3rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      border: 1px solid #fee2e2;
+    }
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+    p {
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .contact-badge {
+      display: inline-block;
+      background: #fee2e2;
+      color: var(--danger);
+      padding: 0.75rem 1.5rem;
+      border-radius: 99px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-card">
+    <div class="icon">🔒</div>
+    <h1>System Activation Required</h1>
+    <p>This installation of the ISP Monitoring System is not authorized for this hardware. Access to all administration and network operations has been restricted.</p>
+    
+    <div style="background: #f1f5f9; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0;">
+      <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Your Unique Machine ID</div>
+      <div id="machineIdDisplay" style="font-family: monospace; font-size: 1.2rem; color: #1e293b; font-weight: 700; letter-spacing: 2px;">FETCHING ID...</div>
+    </div>
+
+    <div class="contact-badge">Please send your Machine ID to the developer to receive an Activation Key.</div>
+  </div>
+
+  <script>
+    // Fetch the Machine ID from the server
+    async function fetchMachineId() {
+      try {
+        const res = await fetch('/api/public/branding'); // A public endpoint that might carry info, or we create a new one
+        // Let's create a dedicated public endpoint for Machine ID to be safe
+        const resId = await fetch('/api/public/machine-id');
+        const data = await resId.json();
+        document.getElementById('machineIdDisplay').textContent = data.id;
+      } catch (e) {
+        document.getElementById('machineIdDisplay').textContent = 'ERROR-FETCHING-ID';
+      }
+    }
+    fetchMachineId();
+  </script>
+</body>
+</html>

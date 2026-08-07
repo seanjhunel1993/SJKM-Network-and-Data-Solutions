@@ -1,0 +1,3122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Monitoring & Billing | Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --card-bg: rgba(30, 41, 59, 0.5);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-blue: #3b82f6;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      --accent-purple: #8b5cf6;
+      --accent-green: #10b981;
+    }
+
+    .main-content {
+      padding: 20px;
+      /* Reduced padding for a tighter, more pro look */
+    }
+
+    /* Header Actions */
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .header-info h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+    }
+    .header-info p {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent-green);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .btn-record {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-record:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      filter: brightness(1.1);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .middle-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    /* Radial Progress */
+    .radial-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        height: 200px;
+    }
+    .radial-svg {
+        transform: rotate(-90deg);
+        width: 150px;
+        height: 150px;
+    }
+    .radial-bg {
+        fill: none;
+        stroke: rgba(255,255,255,0.05);
+        stroke-width: 12;
+    }
+    .radial-progress {
+        fill: none;
+        stroke: var(--accent-purple);
+        stroke-width: 12;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1s ease;
+    }
+    .radial-text {
+        position: absolute;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    /* Line Chart Area */
+    .line-chart-container {
+        height: 250px;
+        width: 100%;
+        position: relative;
+        padding: 20px 0;
+    }
+    .line-svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+    .line-path {
+        fill: none;
+        stroke: var(--accent-purple);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .area-fill {
+        fill: url(#chartGradient);
+        opacity: 0.2;
+    }
+    .chart-point {
+        fill: var(--accent-purple);
+        stroke: #fff;
+        stroke-width: 2;
+    }
+    .chart-axis-label {
+        font-size: 10px;
+        fill: var(--text-dim);
+    }
+
+    .activity-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .feed-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: rgba(255,255,255,0.02);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .feed-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .feed-info { flex: 1; }
+    .feed-name { font-size: 0.85rem; font-weight: 700; color: #fff; }
+    .feed-meta { font-size: 0.7rem; color: var(--text-dim); }
+    .feed-amount { font-weight: 800; color: var(--accent-green); font-size: 0.9rem; }
+
+    .filter-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .filter-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+    .filter-btn.active {
+        background: var(--accent-blue);
+        color: white;
+        border-color: var(--accent-blue);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    }
+
+    .efficiency-card {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        padding: 20px;
+        border-radius: 20px;
+        text-align: center;
+    }
+    .efficiency-value { font-size: 2.5rem; font-weight: 900; color: #fff; margin: 10px 0; }
+    .efficiency-label { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+    .stat-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: none;
+      border-radius: 20px;
+      padding: 20px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 0;
+    }
+    .stat-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-4px);
+    }
+    .stat-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stat-icon svg { width: 28px; height: 28px; }
+    
+    .stat-info .value {
+      font-size: 1.3rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .stat-info .label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+
+    .revenue-card .stat-icon { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); }
+    .overdue-card .stat-icon { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); }
+    .unpaid-card .stat-icon { background: rgba(245, 158, 11, 0.1); color: var(--accent-yellow); }
+    .due-card .stat-icon { background: rgba(245, 158, 11, 0.1); color: var(--accent-yellow); }
+    .clients-card .stat-icon { background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); }
+
+    /* Premium Modal Table Styling */
+    .btn-ledger-action {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-ledger-action:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+    
+    #clientsListTableBody tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .soa-table td {
+        line-height: 1.5;
+    }
+
+    /* Middle Row */
+    .middle-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: none;
+      border-radius: 20px;
+      padding: 20px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Chart Area */
+    .chart-container {
+      height: 160px;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      padding-top: 20px;
+    }
+    .chart-bar-wrap {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+    }
+    .chart-bar {
+      width: 100%;
+      max-width: 45px;
+      background: linear-gradient(to top, var(--accent-blue), var(--accent-purple));
+      border-radius: 6px 6px 0 0;
+      transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .chart-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 12px;
+      white-space: nowrap;
+    }
+
+    /* Efficiency Gauge */
+    .efficiency-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .gauge-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 15px 0;
+    }
+    .gauge-svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 12;
+    }
+    .gauge-fill {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-dasharray: 440;
+      stroke-dashoffset: 440;
+      transition: stroke-dashoffset 1.5s ease-in-out;
+    }
+    .gauge-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    /* Recent History List */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* SOA Table Section */
+    .soa-section {
+      margin-top: 10px;
+    }
+    .soa-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+    .soa-table th {
+      padding: 12px 20px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .soa-table tr td {
+      padding: 16px 20px;
+      background: var(--card-bg);
+      border-top: none;
+      border-bottom: none;
+    }
+    .soa-table tr.disconnected-row td {
+      background: rgba(239, 68, 68, 0.03);
+      opacity: 0.8;
+    }
+    .soa-table tr td:first-child {
+      border-left: none;
+      border-radius: 12px 0 0 12px;
+    }
+    .soa-table tr.disconnected-row td:first-child {
+      border-left: none;
+    }
+    .soa-table tr td:last-child {
+      border-right: none;
+      border-radius: 0 12px 12px 0;
+    }
+
+    .soa-table tbody tr { transition: all 0.2s ease; }
+    .soa-table tbody tr:hover { 
+      background: rgba(255, 255, 255, 0.05); 
+      transform: translateX(4px);
+    }
+    .client-name-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .client-name { font-weight: 700; font-size: 0.95rem; transition: all 0.2s; }
+    .client-meta { font-size: 0.75rem; color: var(--text-dim); }
+    .client-name-cell:hover .client-name {
+      color: var(--accent-light) !important;
+      text-decoration: underline;
+    }
+
+    .due-cell { display: flex; flex-direction: column; gap: 4px; }
+    .due-date { font-weight: 700; color: var(--accent-red); font-size: 0.9rem; }
+    .cycle-text { font-size: 0.75rem; color: var(--text-dim); }
+
+    .status-pill {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-overdue { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .status-grace { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .status-paid { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .status-nopayment { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
+    .status-disconnected { background: rgba(255, 255, 255, 0.08); color: #ffffff; border: none; }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: #0f172a; /* Solid dark background */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 800px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.1);
+      animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+    .modal-footer {
+      padding: 24px;
+      border-top: none;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* Record Payment Form */
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-dim); }
+    .client-search-results {
+        position: absolute;
+        width: 100%;
+        background: #1e293b; /* Solid background */
+        border: none;
+        border-radius: 8px;
+        margin-top: 4px;
+        z-index: 3000;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+    }
+    .search-item {
+        padding: 12px 15px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        color: white;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: rgba(255,255,255,0.1); }
+
+    .ledger-summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .ledger-val { font-size: 1.5rem; font-weight: 800; margin-top: 4px; }
+    .ledger-val.red { color: var(--accent-red); }
+    .ledger-val.green { color: var(--accent-green); }
+
+    /* Premium Search Bar */
+    .search-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .search-wrapper svg {
+        position: absolute;
+        left: 14px;
+        width: 16px;
+        height: 16px;
+        color: var(--text-dim);
+        pointer-events: none;
+    }
+
+    /* Print Styles */
+    @media print {
+        @page { margin: 0; size: auto; }
+        body { background: white !important; color: black !important; padding: 0 !important; margin: 1cm !important; }
+        .main-content, #sidebar-placeholder, .mobile-header, .sidebar-overlay, .btn-ledger-action, .btn-close, .modal-footer, #ledgerQuickAction, .soa-table th:last-child, .soa-table td:last-child {
+            display: none !important;
+        }
+        .modal { position: static !important; display: block !important; padding: 0 !important; background: transparent !important; backdrop-filter: none !important; }
+        .modal-content { 
+            position: static !important; 
+            box-shadow: none !important; 
+            border: none !important; 
+            width: 100% !important; 
+            max-width: none !important; 
+            background: white !important; 
+            color: black !important;
+            border-radius: 0 !important;
+        }
+        .modal-header { border-bottom: 2px solid #000 !important; background: white !important; padding: 0 0 10px 0 !important; }
+        .modal-header h2 { color: black !important; font-size: 1.6rem !important; }
+        .modal-body { padding: 20px 0 !important; max-height: none !important; overflow: visible !important; background: white !important; }
+        .print-only-header { display: block !important; }
+        
+        /* Typography & Colors for Print */
+        #ledgerTitle, #ledgerMonthlyRate, #ledgerTotalPaid, #ledgerBalance, .client-name, .soa-table td, .soa-table th { color: black !important; }
+        .stat-icon { display: none !important; }
+        
+        /* Financial Cards for Print */
+        [style*="background: rgba"] { 
+            background: #f8fafc !important; 
+            border: 1px solid #e2e8f0 !important; 
+            color: black !important;
+        }
+        #ledgerTotalPaid { color: #059669 !important; }
+        #ledgerBalance { color: #dc2626 !important; }
+        
+        .soa-table { border: 1px solid #e2e8f0 !important; }
+        .soa-table th { background: #f1f5f9 !important; border-bottom: 1px solid #e2e8f0 !important; }
+        .soa-table td { border-bottom: 1px solid #f1f5f9 !important; }
+    }
+
+    /* Audit Center Styles */
+    .audit-filters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .audit-filter-btn {
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .audit-filter-btn.active {
+      background: #6366f1;
+      color: white;
+      border-color: #6366f1;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .audit-search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 250px;
+    }
+    .audit-search {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 10px 12px 10px 40px;
+      color: white;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .audit-search:focus { border-color: #6366f1; }
+    .audit-search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-dim);
+    }
+    .audit-stat-box {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.1);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .audit-total-label { color: var(--text-dim); font-size: 0.85rem; font-weight: 600; }
+    .audit-total-value { color: #10b981; font-size: 1.5rem; font-weight: 800; }
+    .form-control {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: none;
+        border-radius: 12px;
+        padding: 10px 16px 10px 40px;
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.85rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .form-control:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.06);
+        border: none;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    .form-control::placeholder {
+        color: var(--text-dim);
+        opacity: 0.6;
+    }
+
+    @media (max-width: 1100px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .middle-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ═══════════════════════════════════════════ */
+    /*  SOA PDF EXPORT — Professional Print Mode  */
+    /* ═══════════════════════════════════════════ */
+    @media print {
+      /* Reset everything to white document */
+      *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+      html, body {
+        background: #fff !important;
+        color: #0f172a !important;
+        font-family: 'Inter', 'Segoe UI', sans-serif !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+      }
+
+      /* Hide everything except the ledger modal */
+      #sidebar-placeholder,
+      .main-content,
+      .modal-header,
+      .modal-footer,
+      #revenueAuditModal,
+      #clientsListModal,
+      #paymentModal,
+      .btn-close,
+      .btn-ledger-action,
+      #ledgerQuickAction,
+      #ledgerYearFilter,
+      .soa-section,
+      .stats-grid,
+      .header-top,
+      [style*="FILTER BY YEAR"] {
+        display: none !important;
+      }
+
+      /* Special: Hide the year filter container */
+      #ledgerModal .modal-body > div:last-child > div:first-child > div:last-child {
+        display: none !important;
+      }
+
+      /* Show & style the ledger modal as a flat document */
+      #ledgerModal {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #ledgerModal .modal-content {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #fff !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        display: block !important;
+      }
+      #ledgerModal .modal-body {
+        background: #fff !important;
+      }
+
+      /* Show the print-only header */
+      .print-only-header {
+        display: block !important;
+        padding: 40px 50px 20px 50px !important;
+        border-bottom: 4px solid #2563eb !important;
+        margin-bottom: 30px !important;
+        background: #fff !important;
+      }
+      .print-only-header .fibr-text { font-size: 36pt !important; color: #2563eb !important; }
+
+      /* Print Client Title */
+      .print-soa-title {
+        display: block !important;
+        font-size: 22pt !important;
+        font-weight: 900 !important;
+        color: #000 !important;
+        margin: 0 50px 8px 50px !important;
+        letter-spacing: -0.02em !important;
+        background: #fff !important;
+      }
+      .print-soa-meta {
+        display: flex !important;
+        gap: 25px !important;
+        margin: 0 50px 30px 50px !important;
+        font-size: 11pt !important;
+        color: #475569 !important;
+        font-weight: 600 !important;
+        background: #fff !important;
+      }
+
+      /* Client Intelligence & Financial Cards Grid */
+      #ledgerModal .modal-body > div:first-child {
+        background: #fff !important;
+        padding: 0 50px 30px 50px !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1.2fr !important;
+        gap: 30px !important;
+      }
+      #ledgerModal .modal-body > div:first-child > div {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 25px !important;
+      }
+      
+      /* Make font sizes bigger in cards */
+      #ledgerTotalPaid, #ledgerBalance {
+        font-size: 24pt !important;
+        color: #0f172a !important;
+      }
+
+      /* Transaction History Table */
+      #ledgerModal .modal-body > div:last-child {
+        padding: 0 50px 50px 50px !important;
+        background: #fff !important;
+      }
+      #ledgerModal .soa-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 10px !important;
+        background: #fff !important;
+      }
+      #ledgerModal .soa-table tr, 
+      #ledgerModal .soa-table td, 
+      #ledgerModal .soa-table th {
+        background: #fff !important;
+        color: #000 !important;
+      }
+      #ledgerModal .soa-table th {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+        border-bottom: 2px solid #cbd5e1 !important;
+        padding: 15px 20px !important;
+        font-size: 10pt !important;
+      }
+      #ledgerModal .soa-table td {
+        padding: 15px 20px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        font-size: 11pt !important;
+      }
+
+      #ledgerModal .soa-table tr.disconnected-row td {
+        background: #fff !important;
+        color: #64748b !important;
+      }
+
+      /* Page settings */
+      @page {
+        size: A4 portrait;
+        margin: 0; /* Helps hide browser header/footer if 'Default' margins are used */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-placeholder"></div>
+
+  <main class="main-content">
+    <div class="header-top">
+      <div class="header-info">
+        <div class="status-badge"><div class="pulse"></div> Live | System Ready</div>
+        <h1>Sales Monitoring & Billing</h1>
+        <p>Track revenue, upcoming due, and process customer payments</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-record" onclick="openPaymentModal()">
+          Record Manual Payment
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card revenue-card" onclick="openRevenueAudit()" style="cursor: pointer;">
+        <div class="stat-icon" style="color: #10b981;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="stat-info">
+          <div class="value" id="totalRevStat">₱0</div>
+          <div class="label">Total Revenue (Total)</div>
+        </div>
+      </div>
+      <div class="stat-card overdue-card" onclick="showOverdueClients()" style="cursor: pointer;">
+        <div class="stat-icon" style="color: #ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="stat-info">
+          <div class="value" id="overdueCountStat">0</div>
+          <div class="label">Overdue Accounts</div>
+        </div>
+      </div>
+      <div class="stat-card due-card" onclick="showDueSoonClients()" style="cursor: pointer;">
+        <div class="stat-icon" style="color: #f59e0b;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="stat-info">
+          <div class="value" id="dueSoonCountStat">0</div>
+          <div class="label">Due in 7 Days</div>
+        </div>
+      </div>
+      <div class="stat-card pending-card" onclick="showPendingClients()" style="cursor: pointer;">
+        <div class="stat-icon" style="color: var(--accent-yellow);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="stat-info">
+          <div class="value" id="pendingCountStat">0</div>
+          <div class="label">Pending Payments</div>
+        </div>
+      </div>
+      <div class="stat-card disconnected-card" onclick="showDisconnectedClients()" style="cursor: pointer;">
+        <div class="stat-icon" style="color: #ffffff;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 11-12.73 0M12 2v10"/></svg></div>
+        <div class="stat-info">
+          <div class="value" id="disconnectedCountStat">0</div>
+          <div class="label">Disconnected</div>
+        </div>
+      </div>
+      <div class="stat-card clients-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="stat-info">
+          <div class="value" id="totalClientsStat">0</div>
+          <div class="label">Total Subscribers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Row: Revenue & Efficiency -->
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 20px; margin-bottom: 24px;">
+      <!-- Revenue Chart -->
+      <div class="card" style="padding: 20px; background: var(--bg-glass); border: none; border-radius: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <div>
+            <h2 style="font-size: 1rem; font-weight: 700; margin: 0;">Revenue Growth Trend</h2>
+            <p style="color: var(--text-dim); font-size: 0.7rem; margin-top: 2px;">Annual performance (Jan - Dec)</p>
+          </div>
+        </div>
+        <div style="height: 180px; width: 100%; position: relative;">
+          <canvas id="revenueLineChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Collection Efficiency -->
+      <div class="card" style="padding: 20px; background: var(--bg-glass); border: none; border-radius: 16px; display: flex; flex-direction: column; align-items: center;">
+        <h2 style="font-size: 1rem; font-weight: 700; margin: 0 0 15px 0; align-self: flex-start;">Collection Efficiency</h2>
+        <div style="position: relative; width: 140px; height: 140px; margin-bottom: 20px;">
+          <svg viewBox="0 0 100 100" style="transform: rotate(-90deg); width: 100%; height: 100%;">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"></circle>
+            <circle id="efficiencyProgress" cx="50" cy="50" r="40" fill="none" stroke="url(#donutGradient)" stroke-width="12" stroke-dasharray="251.32" stroke-dashoffset="251.32" stroke-linecap="round" style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1); filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.4));"></circle>
+            <defs>
+              <linearGradient id="donutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1" />
+                <stop offset="100%" stop-color="#a855f7" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%;">
+            <div id="efficiencyVal" style="font-size: 1.8rem; font-weight: 900; color: #fff; line-height:1;">0%</div>
+            <div id="collectedInnerVal" style="font-size: 0.8rem; font-weight: 800; color: #10b981; margin-top: 4px;">₱0</div>
+            <div style="font-size: 0.5rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; font-weight: 700;">Performance</div>
+          </div>
+        </div>
+        
+        <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+          <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Monthly Target</div>
+            <div id="monthlyTargetVal" style="font-size: 0.9rem; font-weight: 800; color: #fff;">₱0</div>
+          </div>
+          <div onclick="showUnpaidClients()" style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.2s; position: relative;" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='var(--accent-blue)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)';" title="Click to view clients who haven't paid this month">
+            <div style="font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                Remaining
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px; height:10px; opacity:0.6;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+            </div>
+            <div id="remainingTargetVal" style="font-size: 0.9rem; font-weight: 800; color: var(--accent-blue);">₱0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="soa-section">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title" style="font-size:1.3rem;">Customer Statement of Account (SOA) Metrics</h2>
+          <p class="panel-subtitle">View all payments or search for a specific client</p>
+        </div>
+        <div class="header-actions" style="display:flex; gap:12px; align-items:center;">
+            <div class="quick-filters" style="display:flex; gap:8px;">
+                <button class="filter-btn active" onclick="filterSOA('all', this)">All</button>
+                <button class="filter-btn" onclick="filterSOA('overdue', this)" style="color:#ef4444">Overdue</button>
+                <button class="filter-btn" onclick="filterSOA('active', this)" style="color:#10b981">PAID</button>
+                <button class="filter-btn" onclick="filterSOA('disconnected', this)" style="color:#ffffff">DISCONNECTED</button>
+            </div>
+            <div class="search-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="soaSearch" class="form-control" placeholder="Search Client or Account ID..." style="width:280px;" oninput="filterSOA()">
+            </div>
+            <select id="salesYearFilter" onchange="loadSalesSummary(); loadSOA();" style="background:var(--bg-glass); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 16px; font-size:0.85rem; font-weight:700; outline:none; cursor:pointer; min-width:120px;">
+                <!-- Years populated dynamically -->
+            </select>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <select id="exportMonthFilter" style="background:#1e293b; color:#fff; border:1px solid rgba(59,130,246,0.4); border-radius:10px; padding:8px 14px; font-size:0.82rem; font-weight:700; outline:none; cursor:pointer; min-width:140px;">
+                    <option value="">Loading months...</option>
+                </select>
+                <button class="btn btn-record" onclick="exportMonthlyPayments()" title="Export Paid Payments for Selected Month" style="padding: 8px 16px; font-size: 0.8rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); display:flex; align-items:center; gap:6px;">
+                    <svg style="width:14px; height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Export Payments
+                </button>
+            </div>
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="soa-table">
+          <thead>
+            <tr>
+              <th>Client Name</th>
+              <th>Due Date</th>
+              <th>Balance</th>
+              <th>Last Payment</th>
+              <th>Method</th>
+              <th>Remarks</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="soaTableBody">
+            <!-- Rows injected here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Ledger Modal -->
+  <div class="modal" id="ledgerModal">
+    <div class="modal-content" style="max-width: 900px; padding: 0; background: var(--bg-dark); border: 1px solid rgba(255,255,255,0.08);">
+      
+      <!-- Print Header (Hidden on screen) -->
+      <div class="print-only-header" style="display: none; padding: 0 0 20px 0; border-bottom: 3px solid #2563eb; margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="color: #2563eb;">
+            <div class="fibr-text" id="printBrandName" style="font-size: 28px; font-weight: 900; line-height: 1;">SJKM NETWORK DATA LINK</div>
+            <div id="printBrandSub" style="font-size: 11px; font-weight: 700; letter-spacing: 3px; margin-top: 4px; color: #2563eb;">NETWORK AND DATA SOLUTION</div>
+          </div>
+          <div style="text-align: right; color: #64748b; font-size: 0.7rem; font-weight: 600;">
+            OFFICIAL STATEMENT OF ACCOUNT<br>
+            Generated on: <span id="soaPrintDate"></span>
+          </div>
+        </div>
+      </div>
+      <div class="print-soa-title" style="display:none;" id="printSoaTitle"></div>
+      <div class="print-soa-meta" style="display:none;" id="printSoaMeta"></div>
+
+      <div class="modal-header" style="padding: 24px 30px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <div class="stat-icon" style="background:rgba(99,102,241,0.1); color:#6366f1; width:50px; height:50px; border-radius:12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <div>
+                <h2 id="ledgerTitle" style="font-size:1.4rem; font-weight:800; margin:0; letter-spacing:-0.02em; color:#fff;">Statement of Account</h2>
+                <div id="ledgerMeta" style="margin-top:4px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;"></div>
+            </div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <button class="btn-ledger-action" onclick="printLedger()" style="display:flex; align-items:center; gap:8px;">
+                <svg style="width:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg> 
+                Export PDF
+            </button>
+            <button class="btn-close" onclick="closeModal('ledgerModal')" style="background:rgba(255,255,255,0.05); color:#fff; border:none; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">&times;</button>
+        </div>
+      </div>
+      
+      <div class="modal-body" style="padding: 0;">
+        <!-- Client Intelligence & Financials Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 25px 30px; background: rgba(0,0,0,0.15);">
+            <!-- Left: Client Info Card -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
+                <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;">Client Intelligence</div>
+                
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div id="ledgerContactInfo">
+                        <!-- Injected via JS -->
+                    </div>
+                    <div id="ledgerAddressInfo" style="margin-top:4px;">
+                        <!-- Injected via JS -->
+                    </div>
+                    <div style="margin-top:8px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.05);">
+                        <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:6px;">Current Status</div>
+                        <div id="ledgerStatusDisplay"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Financial Cards -->
+            <div style="display: grid; grid-template-rows: 1fr 1fr; gap: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 12px; padding: 16px 20px;">
+                        <div style="font-size:0.65rem; color:#10b981; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Total Lifetime Paid</div>
+                        <div style="font-size:1.5rem; font-weight:800; color:#10b981;" id="ledgerTotalPaid">₱0.00</div>
+                    </div>
+                    <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 12px; padding: 16px 20px;">
+                        <div style="font-size:0.65rem; color:var(--accent-red); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Amount Past Due</div>
+                        <div style="font-size:1.5rem; font-weight:800; color:var(--accent-red);" id="ledgerBalance">₱0.00</div>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px 20px; display:flex; align-items:center; justify-content:space-between;">
+                    <div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Subscription Rate</div>
+                        <div style="font-size:1.1rem; font-weight:700; color:#fff;" id="ledgerMonthlyRate">₱0.00 / mo</div>
+                    </div>
+                    <div id="ledgerQuickAction" style="display:flex; gap:10px;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 30px 30px; margin-top: 25px;">
+            <!-- Tabs -->
+            <div style="display:flex; gap: 24px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                <button id="tabTransactions" onclick="switchLedgerTab('transactions')" style="background:none; border:none; color:#fff; padding:12px 4px; font-weight:700; font-size:0.85rem; border-bottom:2px solid var(--accent-blue); cursor:pointer; transition:all 0.2s;">Transaction History</button>
+                <button id="tabCommunications" onclick="switchLedgerTab('communications')" style="background:none; border:none; color:var(--text-muted); padding:12px 4px; font-weight:600; font-size:0.85rem; border-bottom:2px solid transparent; cursor:pointer; transition:all 0.2s;">Communication Log</button>
+            </div>
+
+            <!-- Transactions Tab Content -->
+            <div id="ledgerTransactionsTab">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.1em; display:flex; align-items:center; gap:8px;">
+                        <div style="width:4px; height:4px; background:var(--accent); border-radius:50%;"></div> Billing Ledger
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:0.7rem; color:var(--text-dim); font-weight:700;">FILTER BY YEAR:</span>
+                        <select id="ledgerYearFilter" onchange="filterLedgerByYear()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:6px; padding:4px 10px; font-size:0.8rem; font-weight:600; cursor:pointer; outline:none;">
+                            <option value="all">Show All History</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive" style="border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.01);">
+                    <table class="soa-table" style="margin: 0; width: 100%;">
+                      <thead>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                          <th style="padding: 14px 20px;">Transaction</th>
+                          <th style="padding: 14px 20px;">Date</th>
+                          <th style="padding: 14px 20px;">Status / Method</th>
+                          <th style="padding: 14px 20px;">Amount</th>
+                          <th style="padding: 14px 20px; text-align: right;">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ledgerTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Communications Tab Content -->
+            <div id="ledgerCommunicationsTab" style="display:none; animation: modalIn 0.3s ease;">
+                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.1em; display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                    <div style="width:4px; height:4px; background:var(--accent-purple); border-radius:50%;"></div> Notification History
+                </div>
+                <div class="table-responsive" style="border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; max-height: 350px; overflow-y: auto; background: rgba(255,255,255,0.01);">
+                    <table class="soa-table" style="margin: 0; width: 100%;">
+                        <tbody id="ledgerCommunicationsBody">
+                            <tr><td style="padding: 20px; text-align:center; color:var(--text-dim);">Loading logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer" style="padding: 20px 30px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1); display: flex; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="closeModal('ledgerModal')" style="padding: 10px 24px; font-weight: 600;">Close Statement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Record Payment Modal -->
+  <div class="modal" id="paymentModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="font-size:1.2rem; font-weight:800; margin:0;">Record Payment</h2>
+        <button class="btn-close" onclick="closeModal('paymentModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="position:relative;">
+          <label>Search Client</label>
+          <input type="text" id="clientSearch" class="form-control" placeholder="Type name or account ID..." oninput="searchClientsForPayment()">
+          <div id="searchResults" class="client-search-results"></div>
+          <input type="hidden" id="selectedClientId">
+        </div>
+        <div class="form-group">
+          <label>Amount (₱)</label>
+          <input type="number" id="payAmount" class="form-control" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="payMethod" class="form-control">
+            <option value="Cash">Cash</option>
+            <option value="GCash">GCash</option>
+            <option value="Maya">Maya</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date Paid</label>
+          <input type="date" id="payDate" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Auto-Detected Payment Status</label>
+            <div id="paymentStatusHint" style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; font-size:0.85rem; color:var(--text-dim); display:flex; align-items:center; gap:10px;">
+                <div style="width:10px; height:10px; border-radius:50%; background:#ccc;"></div>
+                Select a client to detect status...
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('paymentModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="savePayment()" id="savePayBtn" style="width:100%;">Save Payment</button>
+      </div>
+    </div>
+  </div>
+  <!-- Payment Success Modal -->
+  <div class="modal" id="paymentSuccessModal">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 40px 30px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.2);">
+      <div style="width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; border: 2px solid rgba(16, 185, 129, 0.2); box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);">
+        <svg style="width: 40px; height: 40px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 8px;">Payment Received</h2>
+      <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 30px;" id="successModalMsg">Transaction has been successfully recorded.</p>
+      
+      <div style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 20px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+          <span style="color: var(--text-dim); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Client</span>
+          <span style="color: #fff; font-weight: 700; font-size: 0.85rem;" id="successClientName">-</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+          <span style="color: var(--text-dim); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Amount Paid</span>
+          <span style="color: #10b981; font-weight: 800; font-size: 1rem;" id="successAmount">-</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1);">
+          <span style="color: var(--text-dim); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Next Due Date</span>
+          <span style="color: var(--accent-blue); font-weight: 700; font-size: 0.85rem;" id="successNextDue">-</span>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" onclick="closeModal('paymentSuccessModal')" style="width: 100%; padding: 14px; font-weight: 700; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+        Done
+      </button>
+    </div>
+  </div>
+  <!-- Revenue Audit Center Modal -->
+  <div class="modal" id="revenueAuditModal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; border-radius:10px; background:rgba(16,185,129,0.1); display:flex; align-items:center; justify-content:center; color:#10b981;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px;height:20px;"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+          <div>
+            <h2 style="font-size:1.2rem; font-weight:800; margin:0;">Revenue Audit Center</h2>
+            <div style="font-size:0.75rem; color:var(--text-dim); font-weight:600; margin-top:2px; text-transform:uppercase; letter-spacing:0.05em;">Financial Intelligence Ledger</div>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('revenueAuditModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="audit-stat-box" style="display: flex; gap: 20px; align-items: stretch;">
+          <div style="flex: 1;">
+            <div class="audit-total-label">Filtered Collections</div>
+            <div class="audit-total-value" id="auditFilteredTotal">₱0</div>
+          </div>
+          <div id="auditMethodSummary" style="display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <!-- Stats injected here -->
+          </div>
+          <button class="btn btn-primary" onclick="exportAuditCsv()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-size:0.75rem; padding:8px 16px; align-self: center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:6px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
+
+        <div class="audit-filters">
+          <div class="audit-search-wrapper">
+            <svg class="audit-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="audit-search" id="auditSearch" placeholder="Search client or account ID..." oninput="filterAuditLedger()">
+          </div>
+          <button class="audit-filter-btn active" onclick="setAuditPeriod('lifetime', this)">Lifetime</button>
+          <button class="audit-filter-btn" onclick="setAuditPeriod('yearly', this)">This Year</button>
+          <button class="audit-filter-btn" onclick="setAuditPeriod('monthly', this)">This Month</button>
+          <button class="audit-filter-btn" onclick="setAuditPeriod('daily', this)">Today</button>
+        </div>
+
+        <div class="table-responsive" style="max-height: 50vh;">
+          <table class="soa-table" style="margin-top: 0;">
+            <thead style="position: sticky; top: 0; background: #0f172a; z-index: 10;">
+              <tr>
+                <th>Transaction</th>
+                <th>Paid Date</th>
+                <th>Status</th>
+                <th style="text-align: right;">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="auditLedgerTableBody">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div style="flex:1; color:var(--text-dim); font-size:0.75rem; font-weight:500;" id="auditResultsCount">Showing 0 transactions</div>
+        <button class="btn btn-secondary" onclick="closeModal('revenueAuditModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clients List Modal (Rebuilt - Billing Overview) -->
+  <div class="modal" id="clientsListModal">
+    <div class="modal-content" style="max-width: 950px;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:15px;">
+          <h2 id="clientsListTitle" style="font-size:1.2rem; font-weight:800; margin:0;">Account List</h2>
+          <div id="clientsListHeaderActions"></div>
+        </div>
+        <button class="btn-close" onclick="closeModal('clientsListModal')">×</button>
+      </div>
+      <!-- Summary Stats Bar -->
+      <div id="clientsListSummary" style="display:none; padding:12px 16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; margin-bottom:16px;">
+        <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#ef4444;"></div>
+            <span style="font-size:0.75rem; color:var(--text-dim); font-weight:600;">TOTAL OVERDUE:</span>
+            <span id="summaryTotalAmount" style="font-size:1rem; font-weight:800; color:#ef4444;">₱0</span>
+          </div>
+          <div style="width:1px; height:20px; background:rgba(255,255,255,0.1);"></div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.75rem; color:var(--text-dim); font-weight:600;">CLIENTS:</span>
+            <span id="summaryClientCount" style="font-size:1rem; font-weight:800; color:#fff;">0</span>
+          </div>
+          <div style="width:1px; height:20px; background:rgba(255,255,255,0.1);"></div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.75rem; color:var(--text-dim); font-weight:600;">AVG DEBT:</span>
+            <span id="summaryAvgDebt" style="font-size:1rem; font-weight:800; color:#f59e0b;">₱0</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-body" style="padding: 0;">
+        <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+          <table class="soa-table" style="margin-top: 0;">
+            <thead style="position: sticky; top: 0; background: var(--bg-main); z-index: 10;">
+              <tr>
+                <th>Client</th>
+                <th>Billing Info</th>
+                <th>Amount Due</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="clientsListTableBody">
+              <!-- Rows injected here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('clientsListModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="admin.js"></script>
+  <script>
+    let currentSOAData = [];
+
+    // --- Load months that have paid payments into the export dropdown ---
+    async function loadExportMonths() {
+        try {
+            const res = await fetch('/api/admin/payment-months?_t=' + Date.now());
+            if (!res.ok) return;
+            const months = await res.json(); // [{year:2026, month:5, label:'May 2026'}, ...]
+            const select = document.getElementById('exportMonthFilter');
+            if (!select) return;
+            if (!months || months.length === 0) {
+                select.innerHTML = '<option value="">No paid records found</option>';
+                return;
+            }
+            select.innerHTML = months.map(m =>
+                `<option value="${m.year}-${String(m.month).padStart(2,'0')}">${m.label}</option>`
+            ).join('');
+        } catch(e) {
+            console.error('Failed to load export months:', e);
+        }
+    }
+
+    // --- Export paid payments for selected month ---
+    function exportMonthlyPayments() {
+        const select = document.getElementById('exportMonthFilter');
+        if (!select || !select.value) {
+            alert('Please select a month to export.');
+            return;
+        }
+        const [year, month] = select.value.split('-');
+        window.location.href = `/api/admin/export-payments?year=${year}&month=${parseInt(month)}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Populate Year Selector ---
+        const currentYear = new Date().getFullYear();
+        const yearSelect = document.getElementById('salesYearFilter');
+        if (yearSelect) {
+            const years = [];
+            for (let y = currentYear - 1; y <= currentYear + 10; y++) {
+                years.push(y);
+            }
+            yearSelect.innerHTML = years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y} Revenue</option>`).join('');
+        }
+
+        loadSalesSummary();
+        loadSOA();
+        loadExportMonths();
+        document.getElementById('payDate').valueAsDate = new Date();
+
+        // Realtime sync: refresh every 30 seconds
+        setInterval(() => {
+            loadSalesSummary();
+            loadSOA();
+        }, 30000);
+    });
+
+    // --- Data Loaders ---
+    let allPaymentsData = [];
+    let currentAuditPeriod = 'lifetime';
+
+    async function openRevenueAudit() {
+        openModal('revenueAuditModal');
+        await loadFullAuditLedger();
+    }
+
+    async function loadFullAuditLedger() {
+        try {
+            const res = await fetch('/api/admin/sales/ledger?_t=' + Date.now());
+            allPaymentsData = await res.json();
+            filterAuditLedger();
+        } catch (err) {
+            console.error('Failed to load audit ledger:', err);
+        }
+    }
+
+    function setAuditPeriod(period, btn) {
+        currentAuditPeriod = period;
+        document.querySelectorAll('.audit-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterAuditLedger();
+    }
+
+    function filterAuditLedger() {
+        const term = document.getElementById('auditSearch').value.toLowerCase();
+        const now = new Date();
+        const todayStr = getLocalDateStr(now);
+        const monthStr = todayStr.substring(0, 7);
+        const yearStr = todayStr.substring(0, 4);
+
+        const filtered = allPaymentsData.filter(p => {
+            // Search filter
+            const matchesSearch = !term || 
+                (p.full_name && p.full_name.toLowerCase().includes(term)) || 
+                (p.account_id && p.account_id.toLowerCase().includes(term));
+            
+            if (!matchesSearch) return false;
+
+            // Period filter
+            const pDate = p.paid_date || p.created_at;
+            if (currentAuditPeriod === 'daily') return pDate.startsWith(todayStr);
+            if (currentAuditPeriod === 'monthly') return pDate.startsWith(monthStr);
+            if (currentAuditPeriod === 'yearly') return pDate.startsWith(yearStr);
+            return true;
+        });
+
+        renderAuditLedger(filtered);
+    }
+
+    function renderAuditLedger(payments) {
+        const tbody = document.getElementById('auditLedgerTableBody');
+        const totalEl = document.getElementById('auditFilteredTotal');
+        const countEl = document.getElementById('auditResultsCount');
+        const summaryEl = document.getElementById('auditMethodSummary');
+
+        let total = 0;
+        let methodCounts = { 'Cash': 0, 'GCash': 0, 'Bank': 0, 'Other': 0 };
+
+        tbody.innerHTML = payments.map(p => {
+            const amt = (p.amount || 0);
+            total += amt;
+            
+            const method = p.payment_method || 'Cash';
+            if (methodCounts[method] !== undefined) methodCounts[method]++;
+            else methodCounts['Other']++;
+
+            let methodIcon = '';
+            let methodColor = '#10b981';
+            if (method === 'GCash') { 
+                methodColor = '#3b82f6';
+                methodIcon = `<svg style="width:12px; height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+            } else if (method === 'Bank') {
+                methodColor = '#8b5cf6';
+                methodIcon = `<svg style="width:12px; height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2l7 8H5l7-8z"/></svg>`;
+            } else {
+                methodIcon = `<svg style="width:12px; height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`;
+            }
+
+            return `
+                <tr style="transition: all 0.2s; cursor: default;" onmouseover="this.style.background='rgba(255,255,255,0.02)';" onmouseout="this.style.background='transparent';">
+                    <td style="padding: 12px 20px;">
+                        <div style="font-weight:700; color:#fff; font-size:0.95rem;">${p.full_name}</div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
+                            <div style="background:${methodColor}20; color:${methodColor}; padding:2px 6px; border-radius:4px; font-size:0.6rem; font-weight:800; display:flex; align-items:center; gap:4px; text-transform:uppercase;">
+                                ${methodIcon} ${method}
+                            </div>
+                            <div style="font-size:0.65rem; color:var(--text-dim); font-weight:600;">Ref: #${p.id}</div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px 20px;">
+                        <div style="font-size:0.85rem; font-weight:700; color:#fff;">${formatDateString(p.paid_date)}</div>
+                        <div style="font-size:0.65rem; color:var(--text-dim); margin-top:2px; font-weight:600;">Recorded at ${formatTimeOnly(p.created_at)}</div>
+                    </td>
+                    <td style="padding: 12px 20px;">
+                        <span class="status-pill status-paid" style="font-size:0.6rem; padding:3px 8px; font-weight:800; background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);">VERIFIED</span>
+                    </td>
+                    <td style="padding: 12px 20px; text-align:right; font-weight:900; color:#10b981; font-size:1rem;">₱${amt.toLocaleString()}</td>
+                </tr>
+            `;
+        }).join('');
+
+        // Render Summary
+        if (summaryEl) {
+            summaryEl.innerHTML = `
+                <div style="text-align:center; padding: 0 10px; border-right: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size:0.55rem; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Cash</div>
+                    <div style="font-size:0.8rem; font-weight:800; color:#10b981;">${methodCounts.Cash}</div>
+                </div>
+                <div style="text-align:center; padding: 0 10px; border-right: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size:0.55rem; color:var(--text-dim); text-transform:uppercase; font-weight:700;">GCash</div>
+                    <div style="font-size:0.8rem; font-weight:800; color:#3b82f6;">${methodCounts.GCash}</div>
+                </div>
+                <div style="text-align:center; padding: 0 10px;">
+                    <div style="font-size:0.55rem; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Other</div>
+                    <div style="font-size:0.8rem; font-weight:800; color:#8b5cf6;">${methodCounts.Bank + methodCounts.Other}</div>
+                </div>
+            `;
+        }
+
+        if (payments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:var(--text-dim);">No transactions found.</td></tr>';
+        }
+
+        totalEl.textContent = `₱${total.toLocaleString()}`;
+        countEl.textContent = `Found ${payments.length} verified transactions`;
+    }
+
+    function exportAuditCsv() {
+        const term = document.getElementById('auditSearch').value;
+        let csv = 'Client Name,Account ID,Paid Date,Amount,Method,Reference\n';
+        
+        // Use currently filtered data for export
+        const now = new Date();
+        const todayStr = getLocalDateStr(now);
+        const monthStr = todayStr.substring(0, 7);
+        const yearStr = todayStr.substring(0, 4);
+
+        const filtered = allPaymentsData.filter(p => {
+            const matchesSearch = !term || 
+                (p.full_name && p.full_name.toLowerCase().includes(term.toLowerCase())) || 
+                (p.account_id && p.account_id.toLowerCase().includes(term.toLowerCase()));
+            if (!matchesSearch) return false;
+            const pDate = p.paid_date || p.created_at;
+            if (currentAuditPeriod === 'daily') return pDate.startsWith(todayStr);
+            if (currentAuditPeriod === 'monthly') return pDate.startsWith(monthStr);
+            if (currentAuditPeriod === 'yearly') return pDate.startsWith(yearStr);
+            return true;
+        });
+
+        filtered.forEach(p => {
+            csv += `"${p.full_name}","${p.account_id || ''}","${p.paid_date}",${p.amount},"${p.payment_method || 'Cash'}","${p.id}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `revenue_audit_${currentAuditPeriod}.csv`);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    async function loadSalesSummary() {
+        try {
+            const selectedYear = document.getElementById('salesYearFilter')?.value || new Date().getFullYear();
+            const res = await fetch(`/api/admin/sales/summary?period=monthly&year=${selectedYear}&_t=` + Date.now());
+            
+            if (res.status === 401) {
+                console.warn('Session expired. Redirecting to login...');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!res.ok) throw new Error(`API Error: ${res.status} ${res.statusText}`);
+            
+            const data = await res.json();
+            if (!data || !data.stats) throw new Error('Invalid summary data received');
+
+            // Update Stats
+            const revEl = document.getElementById('totalRevStat');
+            if (revEl) {
+                const targetRev = Number(data.totalRevenue || 0);
+                // Force instant update if animation fails or to ensure realtime feel
+                revEl.textContent = `\u20b1${targetRev.toLocaleString()}`;
+            }
+
+            const updateStat = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val || 0;
+            };
+
+            updateStat('overdueCountStat', data.stats.overdueCount);
+            updateStat('pendingCountStat', data.stats.pendingCount);
+            updateStat('dueSoonCountStat', data.stats.dueSoonCount);
+            updateStat('totalClientsStat', data.stats.totalClients);
+            updateStat('disconnectedCountStat', data.stats.disconnectedCount);
+            
+            if (typeof renderRevenueLineChart === 'function') renderRevenueLineChart(data.sales);
+            if (typeof updateEfficiencyGauge === 'function') {
+                updateEfficiencyGauge(
+                    data.stats.collectionEfficiency || 0, 
+                    data.stats.monthlyTarget || 0,
+                    data.monthCollection || 0
+                );
+            }
+            if (typeof renderActivityFeed === 'function') renderActivityFeed(data.recentPayments);
+
+        } catch (err) {
+            console.error('CRITICAL: Failed to load sales summary:', err);
+            const statusBadge = document.querySelector('.status-badge');
+            if (statusBadge) statusBadge.innerHTML = `<span style="color:var(--accent-red)">! Data Sync Error: ${err.message}</span>`;
+        }
+    }
+
+    function animateValue(obj, start, end, duration) {
+        if (start === end) {
+            obj.textContent = `\u20b1${end.toLocaleString()}`;
+            return;
+        }
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const current = Math.floor(progress * (end - start) + start);
+            obj.textContent = `\u20b1${current.toLocaleString()}`;
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    function filterSOA(type, btn) {
+        // Update active button if provided, otherwise find it
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        if (btn) {
+            btn.classList.add('active');
+        } else {
+            const match = document.querySelector(`.filter-btn[onclick*="'${type}'"]`);
+            if (match) match.classList.add('active');
+        }
+
+        const todayStr = getLocalDateStr();
+        const in7Days = new Date(); 
+        in7Days.setDate(in7Days.getDate() + 7);
+        const in7DaysStr = getLocalDateStr(in7Days);
+
+        let filtered = window.allClients;
+        if (type !== 'all') {
+            filtered = window.allClients.filter(c => {
+                const isDisconnected = c.status === 'disconnected' || c.status === 'disabled';
+                const isOverdue = !isDisconnected && c.next_due_date && c.next_due_date < todayStr;
+                const isDueSoon = !isOverdue && !isDisconnected && c.next_due_date && c.next_due_date <= in7DaysStr;
+
+                if (type === 'overdue') return isOverdue;
+                if (type === 'due-soon') return isDueSoon;
+                if (type === 'active') return !isDisconnected && !isOverdue && !isDueSoon;
+                if (type === 'disconnected') return isDisconnected;
+                if (type === 'pending') return !isDisconnected && (c.wallet_balance || 0) > 0 && c.next_due_date && c.next_due_date <= todayStr;
+                return true;
+            });
+        }
+        
+        renderSOATable(filtered);
+        
+        // Smooth scroll to table
+        document.querySelector('.soa-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function quickPay(clientId) {
+        openPaymentModal();
+        const client = window.allClients.find(c => c.id === clientId);
+        if (client) {
+            document.getElementById('clientSearch').value = client.full_name;
+            document.getElementById('selectedClientId').value = client.id;
+            // Trigger status hint logic if needed
+            searchClientsForPayment(); 
+        }
+    }
+
+    function exportSOACsv() {
+        if (!window.allClients || window.allClients.length === 0) return;
+        
+        let csv = 'Name,Account ID,Plan,Due Date,Last Payment Date,Total Paid,Status\n';
+        const today = new Date().toISOString().split('T')[0];
+        
+        window.allClients.forEach(c => {
+            const status = c.next_due_date < today ? 'Overdue' : 'Active';
+            const lastPaymentDate = c.last_payment_date ? c.last_payment_date : 'N/A';
+            csv += `"${c.full_name}","${c.account_id}","${c.plan}","${c.next_due_date}","${lastPaymentDate}",${c.total_paid},"${status}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'soa_report.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    let revenueChart = null;
+    function renderRevenueLineChart(salesData) {
+        const ctx = document.getElementById('revenueLineChart').getContext('2d');
+        if (!ctx) return;
+
+        // Prepare months labels and zeroed data
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthlyValues = new Array(12).fill(0);
+        const currentYear = new Date().getFullYear().toString();
+        
+        if (salesData && salesData.length > 0) {
+            salesData.forEach(item => {
+                const [year, month] = item.label.split('-');
+                if (year === currentYear) {
+                    const monthIdx = parseInt(month) - 1;
+                    if (monthIdx >= 0 && monthIdx < 12) monthlyValues[monthIdx] = item.total;
+                }
+            });
+        }
+
+        if (revenueChart) revenueChart.destroy();
+
+        // Create Gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+        revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: monthNames,
+                datasets: [{
+                    label: 'Revenue',
+                    data: monthlyValues,
+                    borderColor: '#6366f1',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: '#6366f1',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 3,
+                    fill: true,
+                    backgroundColor: gradient,
+                    tension: 0.45, // Smooth curve
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleFont: { size: 13, weight: '700', family: "'Inter', sans-serif" },
+                        bodyFont: { size: 12, family: "'Inter', sans-serif" },
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: false,
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: (context) => ` \u20b1${context.parsed.y.toLocaleString()}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10, weight: '600' } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+                        ticks: { 
+                            color: 'rgba(255,255,255,0.4)', 
+                            font: { size: 10, weight: '600' },
+                            callback: (val) => val >= 1000 ? (val/1000) + 'k' : val
+                        }
+                    }
+                },
+                animations: {
+                    tension: {
+                        duration: 1000,
+                        easing: 'linear',
+                        from: 1,
+                        to: 0.45,
+                        loop: false
+                    }
+                }
+            }
+        });
+    }
+
+    function updateEfficiencyGauge(percent, target, current) {
+        const circle = document.getElementById('efficiencyProgress');
+        const text = document.getElementById('efficiencyVal');
+        const innerCollected = document.getElementById('collectedInnerVal');
+        const targetEl = document.getElementById('monthlyTargetVal');
+        const remainingEl = document.getElementById('remainingTargetVal');
+        
+        if(!circle || !text) return;
+        
+        const radius = 40;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (Math.min(percent, 100) / 100) * circumference;
+        
+        circle.style.strokeDashoffset = offset;
+        text.textContent = `${Math.round(percent)}%`;
+        
+        if (innerCollected) innerCollected.textContent = `\u20b1${current.toLocaleString()}`;
+        if (targetEl) targetEl.textContent = `\u20b1${target.toLocaleString()}`;
+        if (remainingEl) {
+            const remaining = Math.max(target - current, 0);
+            remainingEl.textContent = `\u20b1${remaining.toLocaleString()}`;
+        }
+    }
+
+    function renderActivityFeed(payments) {
+        const feed = document.getElementById('recentPaymentsFeed');
+        if (!feed) return;
+        if (!payments || payments.length === 0) {
+            feed.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-dim); font-size:0.8rem;">No recent collections</div>';
+            return;
+        }
+
+        feed.innerHTML = payments.map(p => {
+            const date = new Date(p.created_at);
+            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="feed-item">
+                    <div class="feed-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;"><path d="M20 6L9 17l-5-5"/></svg>
+                    </div>
+                    <div class="feed-info">
+                        <div class="feed-name">${p.full_name}</div>
+                        <div class="feed-meta">${time} • ${p.payment_method || 'Cash'}</div>
+                    </div>
+                    <div class="feed-amount">+₱${p.amount.toLocaleString()}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function loadSOA() {
+        try {
+            const res = await fetch('/api/admin/sales/soa?_t=' + Date.now());
+            
+            if (res.status === 401) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!res.ok) throw new Error(`SOA Fetch Error: ${res.status}`);
+
+            currentSOAData = await res.json();
+            if (!Array.isArray(currentSOAData)) throw new Error('SOA data is not an array');
+
+            window.allClients = currentSOAData; 
+            renderSOATable(currentSOAData);
+        } catch (err) {
+            console.error('CRITICAL: Failed to load SOA table:', err);
+        }
+    }
+
+    function getLocalDateStr(date) {
+        const d = date || new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function showOverdueClients() {
+        const todayStr = getLocalDateStr();
+        const filtered = currentSOAData.filter(c => {
+            return c.status !== 'disconnected' && c.status !== 'disabled' && c.next_due_date && c.next_due_date < todayStr;
+        });
+        renderClientsListModal('Overdue Accounts', filtered);
+    }
+
+    function showDisconnectedClients() {
+        const filtered = currentSOAData.filter(c => c.status === 'disconnected' || c.status === 'disabled');
+        renderClientsListModal('Disconnected Accounts', filtered);
+    }
+
+    function showDueSoonClients() {
+        const todayStr = getLocalDateStr();
+        const in7Days = new Date();
+        in7Days.setDate(in7Days.getDate() + 7);
+        const in7DaysStr = getLocalDateStr(in7Days);
+        
+        const filtered = currentSOAData.filter(c => {
+            return c.status !== 'disconnected' && c.status !== 'disabled' && 
+                   c.next_due_date && 
+                   c.next_due_date >= todayStr && 
+                   c.next_due_date <= in7DaysStr;
+        });
+        renderClientsListModal('Accounts Due in 7 Days', filtered);
+    }
+
+    function showPendingClients() {
+        const todayStr = getLocalDateStr();
+        const filtered = currentSOAData.filter(c => {
+            const isDisconnected = c.status === 'disconnected' || c.status === 'disabled';
+            // Pending = has credit but still due today or overdue
+            return !isDisconnected && (c.wallet_balance || 0) > 0 && c.next_due_date && c.next_due_date <= todayStr;
+        });
+        renderClientsListModal('Pending Payments (Partial Collections)', filtered);
+    }
+
+    function showUnpaidClients() {
+        const d = new Date();
+        const lastDayOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+        const monthEndStr = getLocalDateStr(lastDayOfMonth);
+        
+        const filtered = currentSOAData.filter(c => {
+            // A client is "Unpaid" for the current month if their next_due_date hasn't crossed the month end
+            return c.status === 'active' && c.next_due_date && c.next_due_date <= monthEndStr;
+        });
+        
+        renderClientsListModal('Pending Collections (Current Month)', filtered);
+    }
+
+    function renderClientsListModal(title, clients) {
+        document.getElementById('clientsListTitle').textContent = title;
+        const isOverdueView = (title === 'Overdue Accounts');
+        
+        // Add "Remind All" button if it's the Overdue category
+        const headerActions = document.getElementById('clientsListHeaderActions');
+        if (headerActions) {
+            headerActions.innerHTML = (isOverdueView && clients.length > 0) 
+                ? `<button class="btn btn-primary" onclick="remindAllOverdue()" style="padding:6px 15px; font-size:0.75rem; background:#6366f1; border:none; box-shadow:0 0 15px rgba(99,102,241,0.4);">🚀 REMIND ALL OVERDUE</button>`
+                : '';
+        }
+        
+        window.currentCategoryClients = clients; // Store for bulk action
+        const tbody = document.getElementById('clientsListTableBody');
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const todayStr = getLocalDateStr(today);
+        const fmt = (v) => Number(v || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        // Summary calculations
+        let totalOverdue = 0;
+        const summaryBar = document.getElementById('clientsListSummary');
+
+        if (clients.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:var(--text-dim);">No clients found in this category.</td></tr>';
+            if (summaryBar) summaryBar.style.display = 'none';
+        } else {
+            // Pre-calculate amounts for each client
+            const enriched = clients.map(c => {
+                const planPrice = c.plan_price || c.monthly_rate || 0;
+                const wallet = c.wallet_balance || 0;
+                let monthsOwed = 0;
+                let amountDue = 0;
+                let daysLate = 0;
+
+                if (c.next_due_date) {
+                    const dDue = new Date(c.next_due_date + 'T00:00:00');
+                    const diffTime = today - dDue;
+                    daysLate = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+
+                    // Count months owed
+                    let tempDate = new Date(dDue.getFullYear(), dDue.getMonth(), dDue.getDate());
+                    while (tempDate.getTime() <= today.getTime()) {
+                        monthsOwed++;
+                        tempDate.setMonth(tempDate.getMonth() + 1);
+                    }
+                    if (monthsOwed === 0) monthsOwed = 1;
+
+                    amountDue = (monthsOwed * planPrice) - wallet;
+                    if (amountDue < 0) amountDue = 0;
+                }
+
+                return { ...c, planPrice, wallet, monthsOwed, amountDue, daysLate };
+            });
+
+            // Sort by amount due (highest first)
+            enriched.sort((a, b) => b.amountDue - a.amountDue);
+
+            // Calculate totals
+            totalOverdue = enriched.reduce((sum, c) => sum + c.amountDue, 0);
+            const avgDebt = enriched.length > 0 ? totalOverdue / enriched.length : 0;
+
+            // Update summary bar
+            if (summaryBar && isOverdueView) {
+                summaryBar.style.display = 'block';
+                document.getElementById('summaryTotalAmount').textContent = `₱${fmt(totalOverdue)}`;
+                document.getElementById('summaryClientCount').textContent = enriched.length;
+                document.getElementById('summaryAvgDebt').textContent = `₱${fmt(avgDebt)}`;
+            } else if (summaryBar) {
+                summaryBar.style.display = 'none';
+            }
+
+            tbody.innerHTML = enriched.map(c => {
+                // Urgency color
+                let urgencyColor = '#f59e0b'; // 1 month - amber
+                if (c.monthsOwed >= 3) urgencyColor = '#ef4444'; // 3+ months - red
+                else if (c.monthsOwed >= 2) urgencyColor = '#f97316'; // 2 months - orange
+
+                // Build human-readable financial story
+                let breakdownText = '';
+                let storyColor = 'var(--text-dim)';
+                
+                if (c.amountDue <= 0 && c.wallet > 0) {
+                    breakdownText = `Advance Paid (₱${fmt(c.wallet)} credit)`;
+                    storyColor = '#10b981'; // Green
+                } else if (c.amountDue <= 0) {
+                    breakdownText = 'Fully Paid';
+                    storyColor = '#10b981'; // Green
+                } else if (c.wallet > 0) {
+                    breakdownText = `Partially Paid (₱${fmt(c.amountDue)} balance remains)`;
+                    storyColor = '#f59e0b'; // Amber
+                } else if (c.monthsOwed > 1) {
+                    breakdownText = `${c.monthsOwed} Months Unpaid`;
+                    storyColor = '#ef4444'; // Red
+                } else {
+                    breakdownText = `1 Month Unpaid (₱${fmt(c.planPrice)})`;
+                    storyColor = 'var(--text-dim)';
+                }
+
+                // Months label
+                const monthsLabel = c.monthsOwed === 1 ? '1 MONTH' : `${c.monthsOwed} MONTHS`;
+
+                // Due date formatted
+                const dueDateFormatted = c.next_due_date ? formatDateString(c.next_due_date) : 'N/A';
+
+                // Breakdown text logic
+                let breakdownHtml = `<div style="font-size:0.65rem; color:${storyColor}; margin-top:3px; font-style:italic;">${breakdownText}</div>`;
+                if (title.includes('Pending')) {
+                    const lastPay = c.last_payment_amount || '₱0.00';
+                    breakdownHtml = `
+                        <div style="font-size:0.65rem; color:#f59e0b; margin-top:3px; font-weight:700;">Partial Pay: ₱${fmt(c.wallet)} (Last: ${lastPay})</div>
+                        <div style="font-size:0.65rem; color:var(--text-dim); margin-top:1px;">Rem. for Month: ₱${fmt(c.planPrice - c.wallet)}</div>
+                    `;
+                }
+
+                return `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 14px 16px;">
+                            <div style="font-weight:700; color:#fff; font-size:0.95rem;">${c.full_name}</div>
+                            <div style="font-size:0.7rem; color:var(--text-dim); margin-top:3px; font-weight:500;">
+                                ${c.account_id || 'N/A'} • <span style="color:var(--accent-purple); font-weight:700;">${c.plan || 'No Plan'}</span>
+                            </div>
+                        </td>
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size:0.8rem; color:#fff; font-weight:600;">₱${fmt(c.planPrice)}/mo</div>
+                            <div style="font-size:0.7rem; color:var(--text-dim); margin-top:2px;">Due: ${dueDateFormatted}</div>
+                            <div style="display:inline-block; margin-top:4px; padding:2px 8px; border-radius:4px; font-size:0.6rem; font-weight:800; letter-spacing:1px; color:${urgencyColor}; background:${urgencyColor}15; border:1px solid ${urgencyColor}30;">${monthsLabel} UNPAID</div>
+                        </td>
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size:1.1rem; font-weight:800; color:${urgencyColor};">₱${fmt(c.amountDue)}</div>
+                            ${breakdownHtml}
+                        </td>
+                        <td style="padding: 14px 16px; text-align: right;">
+                            <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+                                <button class="btn-ledger-action" onclick="closeModal('clientsListModal'); viewLedger(${c.id})">
+                                    View Details
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        document.getElementById('clientsListModal').classList.add('active');
+    }
+
+    // Reuse existing modal logic
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    // --- Rendering ---
+    function renderRevenueChart(sales) {
+        const content = document.getElementById('chartContent');
+        if (!content) return;
+        if (!sales || sales.length === 0) {
+            content.innerHTML = '<text x="500" y="125" text-anchor="middle" fill="var(--text-dim)">No data available</text>';
+            return;
+        }
+
+        const data = sales.slice().reverse();
+        const max = Math.max(...data.map(s => s.total), 1000);
+        const width = 1000;
+        const height = 250;
+        const paddingX = 80;
+        const paddingY = 60;
+
+        const points = data.map((s, i) => {
+            const x = data.length > 1 ? (i / (data.length - 1)) * (width - paddingX * 2) + paddingX : width / 2;
+            const y = height - (s.total / max) * (height - paddingY * 2) - paddingY;
+            return { x, y, label: s.label, total: s.total };
+        });
+
+        let pathData = "";
+        if (points.length === 1) {
+            pathData = `M 0 ${points[0].y} L ${width} ${points[0].y}`;
+        } else {
+            pathData = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
+        }
+        
+        const areaData = points.length > 1 
+            ? `${pathData} L ${points[points.length - 1].x} ${height - 20} L ${points[0].x} ${height - 20} Z`
+            : "";
+
+        content.innerHTML = `
+            ${areaData ? `<path class="area-fill" d="${areaData}" />` : ''}
+            <path class="line-path" d="${pathData}" />
+            ${points.map(p => `
+                <circle class="chart-point" cx="${p.x}" cy="${p.y}" r="5" />
+                <text class="chart-axis-label" x="${p.x}" y="${height - 10}" text-anchor="middle" style="font-size:12px;">${p.label}</text>
+                <text class="chart-axis-label" x="${p.x}" y="${p.y - 15}" text-anchor="middle" style="font-weight:800; font-size:12px; fill:#fff;">₱${p.total.toLocaleString()}</text>
+            `).join('')}
+        `;
+    }
+
+    function renderSOATable(clients) {
+        const tbody = document.getElementById('soaTableBody');
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const todayStr = getLocalDateStr(today);
+        const in7Days = new Date(today); 
+        in7Days.setDate(today.getDate() + 7);
+        const in7DaysStr = getLocalDateStr(in7Days);
+        
+        tbody.innerHTML = clients.map(c => {
+            const isDisconnected = c.status === 'disconnected' || c.status === 'disabled';
+            const isOverdue = !isDisconnected && c.next_due_date && c.next_due_date < todayStr;
+            const isDueSoon = !isOverdue && !isDisconnected && c.next_due_date && c.next_due_date <= in7DaysStr;
+            
+            let statusClass = '';
+            let statusText = '';
+            let themeColor = '#10b981'; // Default PAID (Green)
+            let indicatorHtml = '';
+            if (isDisconnected) {
+                statusClass = 'status-disconnected';
+                statusText = 'DISCONNECTED';
+                themeColor = '#ffffff';
+                indicatorHtml = statusText;
+            } else if (isOverdue) {
+                statusClass = 'status-overdue';
+                statusText = 'OVERDUE';
+                themeColor = '#ef4444';
+                
+                const dDue = new Date(c.next_due_date + 'T00:00:00');
+                const diffTime = today - dDue;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                indicatorHtml = diffDays > 0 ? `${diffDays}d LATE` : statusText;
+            } else if (isDueSoon) {
+                statusClass = 'status-grace';
+                statusText = 'DUE SOON';
+                themeColor = '#f59e0b';
+
+                const dDue = new Date(c.next_due_date + 'T00:00:00');
+                const diffTime = dDue - today;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) indicatorHtml = 'DUE TODAY';
+                else if (diffDays === 1) indicatorHtml = 'DUE TOMORROW';
+                else indicatorHtml = `DUE IN ${diffDays}d`;
+            } else if (!c.total_paid || c.total_paid === 0) {
+                statusClass = 'status-nopayment';
+                statusText = 'NO PAYMENT';
+                themeColor = '#94a3b8';
+                indicatorHtml = statusText;
+            } else {
+                // Check if in Advance (e.g. more than 31 days from today)
+                const dDue = new Date(c.next_due_date + 'T00:00:00');
+                const diffTime = dDue - today;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays > 31) {
+                    statusClass = 'status-paid';
+                    statusText = 'PAY IN ADVANCE';
+                    themeColor = '#a855f7'; // Purple for Advance
+                    indicatorHtml = statusText;
+                } else {
+                    statusClass = 'status-paid';
+                    statusText = 'PAID';
+                    themeColor = '#10b981';
+                    indicatorHtml = statusText;
+                }
+            }
+
+            // ─── SUPER FRIENDLY CALCULATIONS ───
+            let balance = 0;
+            const effectiveRate = c.plan_price || c.monthly_rate || 0;
+            const walletCredit = c.wallet_balance || 0;
+            const dueStr = c.next_due_date ? (c.next_due_date.includes('T') ? c.next_due_date : c.next_due_date + 'T12:00:00') : null;
+            const due = dueStr ? new Date(dueStr) : null;
+            
+            if (isDisconnected) {
+                balance = 0;
+            } else if (isOverdue && due) {
+                let monthsOwed = 0;
+                let tempDate = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+                while (tempDate.getTime() <= today.getTime()) {
+                    monthsOwed++;
+                    tempDate.setMonth(tempDate.getMonth() + 1);
+                }
+                if (monthsOwed === 0) monthsOwed = 1;
+                balance = (effectiveRate * monthsOwed) - walletCredit;
+                if (balance < 0) balance = 0;
+            } else if (isDueSoon && due) {
+                balance = effectiveRate - walletCredit;
+                if (balance < 0) balance = 0;
+            }
+
+            let cycleSubText = '';
+            if (isDisconnected) {
+                cycleSubText = 'Service Suspended';
+            } else if (isOverdue) {
+                cycleSubText = `<span style="color:var(--accent-red); font-weight:600;">Outstanding since ${formatDateString(c.next_due_date)}</span>`;
+            } else if (isDueSoon) {
+                cycleSubText = `Current Bill due ${formatDateString(c.next_due_date)}`;
+            } else {
+                cycleSubText = `<span style="color:var(--accent-green); font-weight:600;">Fully Paid until ${formatDateString(c.next_due_date)}</span>`;
+            }
+
+            // ─── UI ELEMENTS ───
+            let balanceHtml = `<span style="color:${themeColor}">₱${balance.toLocaleString()}</span>`;
+            if (balance <= 0 && walletCredit > 0) {
+                balanceHtml = `<span style="color:#10b981; font-size:0.85rem;">Advance: ₱${walletCredit.toLocaleString()}</span>`;
+            } else if (balance <= 0 && !isDisconnected) {
+                balanceHtml = `<span style="color:#10b981;">₱0</span>`;
+            } else if (isDisconnected) {
+                balanceHtml = `<span style="color:var(--text-dim);">-</span>`;
+            }
+
+            // Method Icon Logic
+            let methodIcon = '';
+            let methodColor = 'var(--text-dim)';
+            const method = c.payment_method || '-';
+            
+            if (method === 'Cash') {
+                methodColor = '#10b981';
+                methodIcon = `<div style="background:${methodColor}20; color:${methodColor}; width:20px; height:20px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; border:1px solid ${methodColor}30; line-height:1;">₱</div>`;
+            } else if (method === 'GCash') {
+                methodColor = '#3b82f6';
+                methodIcon = `<div style="background:${methodColor}20; color:${methodColor}; width:20px; height:20px; border-radius:6px; display:flex; align-items:center; justify-content:center; border:1px solid ${methodColor}30;"><svg style="width:11px; height:11px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>`;
+            } else if (method === 'Maya') {
+                methodColor = '#22c55e';
+                methodIcon = `<div style="background:#111; color:#22c55e; width:20px; height:20px; border-radius:6px; display:flex; align-items:center; justify-content:center; border:1px solid #22c55e; font-size:0.65rem; font-weight:900;">M</div>`;
+            } else if (method === 'Bank') {
+                methodColor = '#8b5cf6';
+                methodIcon = `<div style="background:${methodColor}20; color:${methodColor}; width:20px; height:20px; border-radius:6px; display:flex; align-items:center; justify-content:center; border:1px solid ${methodColor}30;"><svg style="width:11px; height:11px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2l7 8H5l7-8z"/></svg></div>`;
+            }
+
+            return `
+                <tr class="${isDisconnected ? 'disconnected-row' : ''}" onclick="viewLedger(${c.id})" style="cursor:pointer;" title="Click anywhere on row to view Ledger">
+                    <td>
+                        <div class="client-name-cell">
+                            <span class="client-name" style="color:var(--text-pure); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 700;">${c.full_name}</span>
+                            <span class="client-meta" style="color:${themeColor}; opacity:0.7;">${c.account_id} • ${c.plan}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="due-cell">
+                            <span class="due-date" style="color: ${themeColor}">${isDisconnected ? 'Suspended' : formatDateString(c.next_due_date)}</span>
+                            <span class="cycle-text" style="font-size: 0.7rem; color: var(--text-dim); margin-top: 2px;">${cycleSubText}</span>
+                        </div>
+                    </td>
+                    <td style="font-weight:700;">${balanceHtml}</td>
+                    <td>${c.last_payment_date ? formatDateString(c.last_payment_date) : 'No payments'}</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            ${methodIcon}
+                            <span style="font-weight:600; font-size:0.85rem; color:#fff;">${method}</span>
+                        </div>
+                    </td>
+                    <td style="font-size:0.75rem; color:var(--text-dim); max-width:150px; overflow:hidden; text-overflow:ellipsis;">${c.last_payment_remarks || c.remarks || '-'}</td>
+                    <td><span class="status-pill ${statusClass}" style="border: 1px solid ${themeColor}40; min-width: 100px; text-align: center;">${indicatorHtml}</span></td>
+                    <td style="text-align:right">
+                        <div style="display:flex; gap:6px; justify-content:flex-end;">
+                            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); quickPay(${c.id})" style="background:var(--success); border-color:var(--success); padding:4px 10px;">Pay</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function toggleClientStatus(id, status) {
+        const currentStatus = String(status).toLowerCase();
+        const action = (currentStatus === 'disconnected' || currentStatus === 'disabled') ? 'reconnect' : 'disconnect';
+        const title = action === 'disconnect' ? 'Disconnect Client' : 'Reconnect Client';
+        
+        let confirmMsg = action === 'disconnect' 
+            ? 'This will stop their billing cycle and notifications. Are you sure you want to proceed?'
+            : '<label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:5px;">SET NEXT DUE DATE:</label>' +
+              '<input type="date" id="reconnectNextDueDate" style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:#fff; font-size:1rem;">';
+
+        window.showConfirm(title, confirmMsg, action === 'disconnect' ? 'Yes, Disconnect' : 'Yes, Reconnect', async () => {
+            try {
+                let bodyData = { client_id: id };
+                if (action === 'reconnect') {
+                    const dateInp = document.getElementById('reconnectNextDueDate');
+                    if (dateInp) bodyData.next_due_date = dateInp.value;
+                    
+                    if (!bodyData.next_due_date) {
+                        if (window.showError) window.showError('Required', 'Please select a Next Due Date for reconnection.');
+                        else alert('Please select a Next Due Date for reconnection.');
+                        return;
+                    }
+                }
+
+                const res = await fetch(`/api/admin/clients/${action}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyData)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadSalesSummary();
+                    loadSOA();
+                    if (window.broadcastUpdate) window.broadcastUpdate('payment_recorded');
+                } else {
+                    if (window.showError) window.showError('Action failed', data.error);
+                    else alert('Action failed: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Toggle status failed:', err);
+            }
+        });
+    }
+
+    // --- UI Helpers ---
+    function formatTimeOnly(isoStr) {
+        if (!isoStr) return '';
+        try {
+            const date = new Date(isoStr);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        } catch (e) { return ''; }
+    }
+
+    function formatDateString(str) {
+        if (!str) return '-';
+        // Append T12:00:00 to prevent UTC timezone shifting
+        const date = new Date(str.includes('T') ? str : str + 'T12:00:00');
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+    }
+
+    function getNextCycleDate(dateStr) {
+        if (!dateStr) return '-';
+        // Append T12:00:00 to prevent UTC timezone shifting
+        const date = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00');
+        date.setMonth(date.getMonth() + 1);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // --- Search ---
+    document.getElementById('soaSearch').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = window.allClients.filter(c => 
+            c.full_name.toLowerCase().includes(term) || 
+            c.account_id.toLowerCase().includes(term)
+        );
+        renderSOATable(filtered);
+    });
+
+    // --- Modals ---
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    async function viewLedger(clientId) {
+        const client = window.allClients.find(c => c.id === clientId);
+        if (!client) return;
+
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const isOverdue = new Date(client.next_due_date) < today;
+
+        document.getElementById('ledgerTitle').textContent = `Statement of Account: ${client.full_name}`;
+        
+        // Update Print Elements for PDF
+        document.getElementById('printSoaTitle').textContent = `Statement of Account: ${client.full_name}`;
+        document.getElementById('printSoaMeta').textContent = `Account ID: ${client.account_id} | Plan: ${client.plan} | Status: ${client.status.toUpperCase()}`;
+        
+        const printDateEl = document.getElementById('soaPrintDate');
+        if (printDateEl) printDateEl.textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        
+        document.getElementById('ledgerMeta').innerHTML = `
+            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:500;">
+                ID: <b style="color:var(--text-primary)">${client.account_id}</b>
+            </span>
+            <span style="width:1px; height:12px; background:rgba(255,255,255,0.1);"></span>
+            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:500;">
+                Plan: <b style="color:var(--accent-light)">${client.plan}</b>
+            </span>
+        `;
+
+        // Inject Intelligence Card data
+        document.getElementById('ledgerContactInfo').innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <svg style="width:14px; color:var(--accent-light)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l2.18-2.18a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                <span style="font-size:0.85rem; font-weight:600; color:#fff;">${client.phone || 'No Phone'}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+                <svg style="width:14px; color:var(--text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span style="font-size:0.8rem; color:var(--text-muted);">${client.email || 'No Email'}</span>
+            </div>
+        `;
+
+        document.getElementById('ledgerAddressInfo').innerHTML = `
+            <div style="display:flex; align-items:start; gap:10px;">
+                <svg style="width:14px; color:var(--text-muted); margin-top:3px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">${client.address || 'No Address'}${client.barangay ? ', ' + client.barangay : ''}</span>
+            </div>
+        `;
+
+        const statusColor = isOverdue ? 'var(--accent-red)' : 'var(--success)';
+        const statusText = isOverdue ? 'OVERDUE / SUSPENDED' : 'ACTIVE / ONLINE';
+        document.getElementById('ledgerStatusDisplay').innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:8px; height:8px; border-radius:50%; background:${statusColor}; box-shadow:0 0 10px ${statusColor};"></div>
+                <span style="font-size:0.75rem; font-weight:800; color:${statusColor}; letter-spacing:1px;">${statusText}</span>
+            </div>
+        `;
+
+        const effectiveRate = client.plan_price || client.monthly_rate || 0;
+        document.getElementById('ledgerMonthlyRate').textContent = `₱${effectiveRate.toLocaleString()} / mo`;
+        
+        document.getElementById('ledgerQuickAction').innerHTML = `
+            <button class="btn-ledger-action" onclick="quickPayFromLedger(${client.id}, '${new Date(client.next_due_date).toISOString().split('T')[0]}')" style="background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;">
+                Settle Balance
+            </button>
+        `;
+        
+        try {
+            const res = await fetch(`/api/admin/payments/client/${clientId}`);
+            const history = await res.json();
+            window.currentLedgerHistory = history;
+            window.currentLedgerClient = client;
+
+            // Calculate actual total from history
+            const totalPaid = history.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+            document.getElementById('ledgerTotalPaid').textContent = `₱${totalPaid.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+
+            // Build Year Filter Options
+            const years = new Set([new Date().getFullYear()]);
+            history.forEach(p => {
+                if (p.paid_date) years.add(new Date(p.paid_date).getFullYear());
+                if (p.due_date) years.add(new Date(p.due_date).getFullYear());
+            });
+            const sortedYears = Array.from(years).sort((a,b) => b - a);
+            const currentYear = new Date().getFullYear();
+            
+            const filterEl = document.getElementById('ledgerYearFilter');
+            if (filterEl) {
+                filterEl.innerHTML = `<option value="all">Full History</option>` + 
+                    sortedYears.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>Year ${y}</option>`).join('');
+            }
+
+            renderLedgerRows(history, client, currentYear.toString());
+            openModal('ledgerModal');
+            window.currentLedgerClientId = clientId;
+            
+            // Reset to Transactions tab and load communications
+            switchLedgerTab('transactions');
+            loadClientCommunications(clientId);
+        } catch (err) {
+            console.error('Failed to load ledger:', err);
+        }
+    }
+
+    function switchLedgerTab(tabName) {
+        const tabTx = document.getElementById('ledgerTransactionsTab');
+        const tabComms = document.getElementById('ledgerCommunicationsTab');
+        const btnTx = document.getElementById('tabTransactions');
+        const btnComms = document.getElementById('tabCommunications');
+
+        if (tabName === 'transactions') {
+            if (tabTx) tabTx.style.display = 'block';
+            if (tabComms) tabComms.style.display = 'none';
+            if (btnTx) { btnTx.style.color = '#fff'; btnTx.style.borderBottomColor = 'var(--accent-blue)'; }
+            if (btnComms) { btnComms.style.color = 'var(--text-muted)'; btnComms.style.borderBottomColor = 'transparent'; }
+        } else {
+            if (tabTx) tabTx.style.display = 'none';
+            if (tabComms) tabComms.style.display = 'block';
+            if (btnTx) { btnTx.style.color = 'var(--text-muted)'; btnTx.style.borderBottomColor = 'transparent'; }
+            if (btnComms) { btnComms.style.color = '#fff'; btnComms.style.borderBottomColor = 'var(--accent-purple)'; }
+        }
+    }
+
+    async function loadClientCommunications(clientId) {
+        const tbody = document.getElementById('ledgerCommunicationsBody');
+        if (!tbody) return;
+        
+        try {
+            // Fetch logs for this client that are communications/reminders
+            const res = await fetch(`/api/admin/activity-logs?client_id=${clientId}`);
+            const logs = await res.json();
+            
+            // Filter only reminder/communication related logs
+            const commLogs = logs.filter(l => 
+                l.category === 'Broadcast' || 
+                l.category === 'Notification' || 
+                l.action.includes('Reminder') || 
+                l.action.includes('SMS') || 
+                l.action.includes('Email')
+            );
+
+            if (commLogs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:30px; color:var(--text-dim);">No communication history found for this client.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = commLogs.map(log => {
+                const date = new Date(log.timestamp);
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                let details = '';
+                try { details = JSON.parse(log.details); } catch(e) { details = { info: log.details }; }
+                
+                const type = log.action.toUpperCase();
+                let icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+                let color = 'var(--text-dim)';
+                
+                if (type.includes('SMS')) {
+                    icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+                    color = '#3b82f6';
+                } else if (type.includes('EMAIL')) {
+                    color = '#f59e0b';
+                } else if (type.includes('BROADCAST')) {
+                    icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+                    color = '#10b981';
+                }
+
+                return `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 14px 20px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="color:${color}; display:flex; align-items:center;">${icon}</div>
+                                <div>
+                                    <div style="font-weight:700; color:#fff; font-size:0.85rem;">${log.action}</div>
+                                    <div style="font-size:0.7rem; color:var(--text-dim); margin-top:2px;">${details.subject || details.info || 'Automated Notification'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 14px 20px; font-size:0.8rem; color:var(--text-muted);">
+                            <div style="font-weight:600; color:#fff;">${dateStr}</div>
+                            <div style="font-size:0.7rem;">${timeStr}</div>
+                        </td>
+                        <td style="padding: 14px 20px; font-size:0.75rem; color:var(--text-dim); text-align:right;">
+                            By: <span style="color:#fff;">${log.admin_name || 'System'}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch(e) {
+            console.error('Failed to load communications:', e);
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:30px; color:var(--accent-red);">Failed to load history.</td></tr>';
+        }
+    }
+
+    function filterLedgerByYear() {
+        const year = document.getElementById('ledgerYearFilter').value;
+        renderLedgerRows(window.currentLedgerHistory, window.currentLedgerClient, year);
+    }
+
+    function renderLedgerRows(history, client, filterYear) {
+        const tbody = document.getElementById('ledgerTableBody');
+        const clientId = client.id;
+        let html = '';
+        
+        // 1. Calculate Balance
+        const todayDate = new Date();
+        todayDate.setHours(0,0,0,0);
+        const dueStr = client.next_due_date ? (client.next_due_date.includes('T') ? client.next_due_date : client.next_due_date + 'T12:00:00') : null;
+        const due = dueStr ? new Date(dueStr) : null;
+        const effectiveRate = client.plan_price || client.monthly_rate || 0;
+        const walletCredit = client.wallet_balance || 0;
+        
+        let balance = 0;
+        let isOverdue = false;
+        let isDueSoon = false;
+        
+        if (due) {
+            const in7 = new Date(todayDate);
+            in7.setDate(todayDate.getDate() + 7);
+            if (due < todayDate) {
+                isOverdue = true;
+                // Count exact months owed
+                let monthsOwed = 0;
+                let tempDate = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+                while (tempDate.getTime() <= todayDate.getTime()) {
+                    monthsOwed++;
+                    tempDate.setMonth(tempDate.getMonth() + 1);
+                }
+                if (monthsOwed === 0) monthsOwed = 1;
+                balance = (effectiveRate * monthsOwed) - walletCredit;
+                if (balance < 0) balance = 0;
+            } else if (due <= in7) {
+                isDueSoon = true;
+                balance = effectiveRate - walletCredit;
+                if (balance < 0) balance = 0;
+            }
+        }
+
+        // 2. Unpaid/Upcoming Months Breakdown
+        const dDueIter = due ? new Date(due.getFullYear(), due.getMonth(), due.getDate()) : null;
+        
+        // ─── NEW: Advance Credit / Overpay Row ───
+        if (walletCredit > 0 && (filterYear === 'all' || (due && filterYear === due.getFullYear().toString()))) {
+            html += `
+                <tr style="background: rgba(16, 185, 129, 0.05); border-left: 3px solid #10b981;">
+                    <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <span style="font-weight:700; color:#fff; font-size:0.9rem;">Advance Credit</span>
+                            <span style="font-size:0.65rem; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; font-weight:800;">OVERPAYMENT APPLIED</span>
+                        </div>
+                    </td>
+                    <td style="padding: 14px 20px; color:var(--text-muted); font-size:0.8rem; border-bottom: 1px solid rgba(255,255,255,0.03);">In Account Wallet</td>
+                    <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <span class="status-pill" style="background:rgba(16,185,129,0.1); color:#10b981; font-size:0.6rem; padding:3px 8px; font-weight:800; letter-spacing:1.5px;">CREDIT</span>
+                    </td>
+                    <td style="padding: 14px 20px; font-weight:800; color:#10b981; border-bottom: 1px solid rgba(255,255,255,0.03);">-₱${walletCredit.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                    <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); text-align:right;">
+                        <span style="font-size:0.65rem; color:var(--text-dim); font-weight:700;">Applied to Next Bill</span>
+                    </td>
+                </tr>`;
+        }
+
+        if (dDueIter && (filterYear === 'all' || filterYear === dDueIter.getFullYear().toString())) {
+            let tempDate = new Date(dDueIter);
+            let monthsToDisplay = 1;
+            let runningCredit = walletCredit;
+
+            if (isOverdue) {
+                monthsToDisplay = 0;
+                while (tempDate.getTime() <= todayDate.getTime()) {
+                    monthsToDisplay++;
+                    tempDate.setMonth(tempDate.getMonth() + 1);
+                }
+                // Reset tempDate for the actual rendering loop
+                tempDate = new Date(dDueIter);
+            }
+
+            for (let i = 0; i < monthsToDisplay; i++) {
+                const rowDate = new Date(tempDate);
+                const rowYear = rowDate.getFullYear().toString();
+                
+                if (filterYear === 'all' || filterYear === rowYear) {
+                    const rowIsOverdue = rowDate < todayDate;
+                    const rowIsDueSoon = !rowIsOverdue && rowDate <= new Date(todayDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    
+                    // SMART CALCULATION: Apply running credit to this month
+                    let originalAmt = effectiveRate;
+                    let displayAmt = effectiveRate;
+                    let creditNote = "";
+                    
+                    if (runningCredit > 0) {
+                        const applied = Math.min(runningCredit, displayAmt);
+                        displayAmt -= applied;
+                        runningCredit -= applied;
+                        creditNote = `<div style="font-size:0.65rem; color:var(--accent-green); font-weight:700;">(₱${originalAmt.toLocaleString()} - ₱${applied.toLocaleString()} Credit)</div>`;
+                    }
+
+                    const statusHtml = rowIsOverdue 
+                        ? '<span class="status-pill" style="background:rgba(239,68,68,0.08); color:#ef4444; font-size:0.6rem; padding:3px 8px; font-weight:800; letter-spacing:1.5px;">OVERDUE</span>'
+                        : (rowIsDueSoon 
+                            ? '<span class="status-pill" style="background:rgba(245,158,11,0.08); color:#f59e0b; font-size:0.6rem; padding:3px 8px; font-weight:800; letter-spacing:1.5px;">DUE SOON</span>'
+                            : '<span class="status-pill" style="background:rgba(255,255,255,0.03); color:var(--text-muted); font-size:0.6rem; padding:3px 8px; font-weight:600; letter-spacing:1.5px;">UPCOMING</span>');
+                    
+                    const actionHtml = `<button class="btn-ledger-action" onclick="quickPayFromLedger(${clientId}, '${rowDate.toISOString().split('T')[0]}')" style="background:var(--accent-blue); color:#fff; border:none; padding:6px 14px; font-size:0.75rem; border-radius:6px; font-weight:700; cursor:pointer;">Settle Bill</button>`;
+                    
+                    const labelText = rowIsOverdue ? 'UNPAID BALANCE' : (rowIsDueSoon ? 'CURRENT BILL' : 'NEXT BILL');
+                    const labelColor = rowIsOverdue ? 'var(--accent-red)' : (rowIsDueSoon ? 'var(--accent-yellow)' : 'var(--accent-blue)');
+                    const monthName = rowDate.toLocaleDateString('en-US', { month: 'long' });
+                    
+                    const rowCycleHtml = `<div style="display:flex; flex-direction:column; gap:2px;"><span style="font-weight:700; color:#fff; font-size:0.9rem;">${monthName} ${rowDate.getFullYear()}</span><span style="font-size:0.65rem; color:${labelColor}; text-transform:uppercase; letter-spacing:0.05em; font-weight:800;">${labelText}</span></div>`;
+
+                    html += `
+                        <tr style="background: ${rowIsOverdue ? 'rgba(239, 68, 68, 0.02)' : 'rgba(59, 130, 246, 0.03)'}; border-left: 3px solid ${rowIsOverdue ? 'var(--accent-red)' : 'var(--accent-blue)'};">
+                            <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);">${rowCycleHtml}</td>
+                            <td style="padding: 14px 20px; color:var(--text-muted); font-size:0.8rem; border-bottom: 1px solid rgba(255,255,255,0.03);">Due ${formatDateString(rowDate.toISOString().split('T')[0])}</td>
+                            <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);">${statusHtml}</td>
+                            <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                <div style="font-weight:800; color:var(--text-primary);">₱${displayAmt.toLocaleString()}</div>
+                                ${creditNote}
+                            </td>
+                            <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); text-align:right;">${actionHtml}</td>
+                        </tr>`;
+                }
+                tempDate.setMonth(tempDate.getMonth() + 1);
+            }
+        }
+
+        // 3. Filtered History Rows
+        const filteredHistory = filterYear === 'all' 
+            ? history 
+            : history.filter(p => {
+                const pYear = p.paid_date ? new Date(p.paid_date).getFullYear().toString() : (p.due_date ? new Date(p.due_date).getFullYear().toString() : null);
+                return pYear === filterYear;
+            });
+        
+        // Sort newest first: primarily by paid_date, fallback to billing cycle, then ID for same-day payments
+        const sortedHistory = [...filteredHistory].sort((a,b) => {
+            const d1 = new Date(b.paid_date || b.created_at).getTime();
+            const d2 = new Date(a.paid_date || a.created_at).getTime();
+            
+            // 1. Sort by Paid Date (Descending)
+            if (d1 !== d2 && !isNaN(d1) && !isNaN(d2)) return d1 - d2;
+            
+            // 2. Fallback: Sort by Billing Cycle (Descending)
+            const cycle1 = new Date(b.previous_due_date || 0).getTime();
+            const cycle2 = new Date(a.previous_due_date || 0).getTime();
+            if (cycle1 !== cycle2 && !isNaN(cycle1) && !isNaN(cycle2)) return cycle1 - cycle2;
+            
+            // 3. Fallback: Sort by ID (Descending)
+            return (b.id || 0) - (a.id || 0);
+        });
+
+        sortedHistory.forEach(p => {
+            const statusHtml = `<span class="status-pill status-paid" style="background:rgba(16,185,129,0.08); color:#10b981; font-size:0.6rem; letter-spacing:1.5px; padding:3px 8px; font-weight:700;">PAID</span>`;
+            const actionHtml = `
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                    <button class="btn-ledger-action" onclick="printReceipt(${p.id})" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:none; padding:4px 10px; font-size:0.65rem;">Receipt</button>
+                    <button class="btn-ledger-action" onclick="voidPayment(${p.id}, ${clientId})" style="background:rgba(239,68,68,0.1); color:#ef4444; border:none; padding:4px 10px; font-size:0.65rem;">Void</button>
+                </div>`;
+            
+            let cycleHtml = 'Internet Service';
+            if (p.previous_due_date && p.previous_due_date !== 'Invalid Date' && p.previous_due_date !== 'NaN') {
+                const dateVal = p.previous_due_date.includes('T') ? p.previous_due_date : p.previous_due_date + 'T12:00:00';
+                const d = new Date(dateVal);
+                if (!isNaN(d.getTime())) {
+                    const monthName = d.toLocaleDateString('en-US', { month: 'long' });
+                    cycleHtml = `<div style="display:flex; flex-direction:column; gap:2px;"><span style="font-weight:700; color:#fff; font-size:0.9rem;">${monthName} ${d.getFullYear()}</span><span style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Internet Service</span></div>`;
+                }
+            }
+
+            const payDateFormatted = (p.paid_date && p.paid_date !== 'Invalid Date' && p.paid_date !== 'NaN') 
+                ? formatDateString(p.paid_date) 
+                : 'Pending/Manual';
+
+            html += `
+                <tr style="background: transparent;">
+                    <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);">${cycleHtml}</td>
+                    <td style="padding: 14px 20px; color:var(--text-muted); font-size:0.8rem; border-bottom: 1px solid rgba(255,255,255,0.03);">${payDateFormatted}</td>
+                    <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);"><div style="display:flex; align-items:center; gap:8px;">${statusHtml} <span style="font-size:0.75rem; color:var(--text-muted);">${p.payment_method || 'Cash'}</span></div></td>
+                    <td style="padding: 14px 20px; font-weight:700; color:var(--success); border-bottom: 1px solid rgba(255,255,255,0.03);">₱${p.amount.toLocaleString()}</td>
+                    <td style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); text-align:right;">${actionHtml}</td>
+                </tr>`;
+        });
+
+        if (html === '') {
+            html = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-dim);">No transactions found for this period.</td></tr>';
+        }
+        
+        tbody.innerHTML = html;
+        document.getElementById('ledgerBalance').textContent = `\u20b1${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        
+        // Calculate actual lifetime total from history (Always use full history for header)
+        const lifetimeTotal = history.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        document.getElementById('ledgerTotalPaid').textContent = `\u20b1${lifetimeTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+    }
+
+    async function restoreClientFresh(clientId) {
+        const confirmMsg = 'This will reactivate the client and RESET their billing cycle to today. All previous overdue months will be skipped. Continue?';
+        if (!await window.customConfirmAsync('Restore Service', confirmMsg)) return;
+
+        try {
+            const res = await fetch('/api/admin/clients/restore-fresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ client_id: clientId })
+            });
+            
+            if (res.ok) {
+                await loadSalesSummary();
+                await loadSOA();
+                await viewLedger(clientId);
+                window.showCustomAlert('Service Restored', 'Account reactivated and billing cycle reset successfully.', false);
+            } else {
+                const err = await res.json();
+                window.showCustomAlert('Failed', err.error || 'Could not restore client.', true);
+            }
+        } catch (err) {
+            console.error('Restore Error:', err);
+            window.showCustomAlert('Error', 'An error occurred during restoration.', true);
+        }
+    }
+
+    function quickPayFromLedger(clientId, dateStr) {
+        closeModal('ledgerModal');
+        quickPay(clientId);
+        // Optionally pre-fill the date if needed, but usually we just want to open the pay modal
+    }
+
+    function openPaymentModal() {
+        loadSOA(); // Ensure we have latest clients for search
+        document.getElementById('clientSearch').value = '';
+        document.getElementById('selectedClientId').value = '';
+        document.getElementById('payAmount').value = '';
+        document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('paymentStatusHint').innerHTML = '<div style="width:10px; height:10px; border-radius:50%; background:#ccc;"></div> Select a client to detect status...';
+        openModal('paymentModal');
+    }
+
+    function searchClientsForPayment() {
+        const term = document.getElementById('clientSearch').value.toLowerCase();
+        const resultsDiv = document.getElementById('searchResults');
+        
+        if (term.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+
+        const filtered = window.allClients.filter(c => 
+            c.full_name.toLowerCase().includes(term) || 
+            c.account_id.toLowerCase().includes(term)
+        );
+
+        if (filtered.length > 0) {
+            resultsDiv.innerHTML = filtered.map(c => {
+                const rate = c.plan_price || c.monthly_rate || 0;
+                return `
+                <div class="search-item" onclick="selectClientForPayment(${c.id}, '${c.full_name.replace(/'/g, "\\'")}', ${rate}, '${c.next_due_date}', '${c.status}')">
+                    <span>${c.full_name} (${c.account_id})</span>
+                    <span style="color:var(--primary); font-weight:700;">₱${rate.toLocaleString()}</span>
+                </div>
+            `}).join('');
+            resultsDiv.style.display = 'block';
+        } else {
+            resultsDiv.style.display = 'none';
+        }
+    }
+
+    function selectClientForPayment(id, name, rate, dueDate, status) {
+        if (status === 'disconnected' || status === 'disabled') {
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('clientSearch').value = '';
+            window.showCustomAlert('Payment Blocked', 'This client is currently <b>DISCONNECTED</b>. You must reconnect their account from the client management page before recording a new payment.', true);
+            return;
+        }
+
+        document.getElementById('selectedClientId').value = id;
+        document.getElementById('clientSearch').value = name;
+        document.getElementById('payAmount').value = rate;
+        document.getElementById('searchResults').style.display = 'none';
+        
+        const today = new Date().toISOString().split('T')[0];
+        const isOverdue = dueDate < today;
+        const hint = document.getElementById('paymentStatusHint');
+        
+        if (isOverdue) {
+            hint.innerHTML = `<div style="width:10px; height:10px; border-radius:50%; background:var(--accent-red);"></div> Client is Overdue (Due: ${formatDateString(dueDate)})`;
+            hint.style.color = 'var(--accent-red)';
+        } else {
+            hint.innerHTML = `<div style="width:10px; height:10px; border-radius:50%; background:var(--accent-green);"></div> Client is Active (Next Due: ${formatDateString(dueDate)})`;
+            hint.style.color = 'var(--accent-green)';
+        }
+    }
+
+    async function savePayment() {
+        const clientId = document.getElementById('selectedClientId').value;
+        const amount = document.getElementById('payAmount').value;
+        const method = document.getElementById('payMethod').value;
+        const date = document.getElementById('payDate').value;
+        const remarks = document.getElementById('payRemarks')?.value || 'Manual Payment';
+        
+        if (!clientId || !amount || !date) {
+            window.showCustomAlert('Missing Info', 'Please fill all required fields.', true);
+            return;
+        }
+
+        const btn = document.getElementById('savePayBtn');
+        if (btn.disabled) return;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Recording...';
+
+        try {
+            const res = await fetch('/api/admin/payments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    client_id: clientId,
+                    amount: amount,
+                    payment_method: method,
+                    date: date,
+                    remarks: remarks
+                })
+            });
+            
+            const result = await res.json();
+            if (res.ok && result.success) {
+                closeModal('paymentModal');
+                
+                // Show Success Modal with details
+                window.showCustomAlert('Success', 'Payment has been recorded successfully.', false);
+                
+                // Trigger real-time sync across tabs
+                if (window.broadcastUpdate) window.broadcastUpdate('payment_recorded');
+                
+                // Refresh UI components
+                await Promise.all([
+                    loadSalesSummary(),
+                    loadSOA()
+                ]).catch(err => console.warn('UI Refresh partial failure:', err));
+
+            } else {
+                window.showCustomAlert('Failed', result.error || 'Could not save payment.', true);
+            }
+        } catch (err) {
+            console.error('Payment Error:', err);
+            window.showCustomAlert('Error', 'A network error occurred while saving the payment.', true);
+        } finally {
+            // ALWAYS reset the button state
+            btn.disabled = false;
+            btn.innerHTML = 'Save Payment';
+        }
+    }
+
+    function printLedger() {
+        const d = new Date();
+        const dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        
+        const dateEl = document.getElementById('soaPrintDate');
+        if (dateEl) dateEl.textContent = `${dateStr} at ${timeStr}`;
+        
+        window.print();
+    }
+
+    async function voidPayment(paymentId, clientId) {
+        if (!await window.customConfirmAsync('Void Payment', 'Are you sure you want to invalidate this payment? This will also revert the client\'s due date by 1 month.')) return;
+        
+        try {
+            const res = await fetch('/api/admin/payments/void', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_id: paymentId })
+            });
+            
+            if (res.ok) {
+                // Refresh everything
+                await loadSalesSummary();
+                await loadSOA();
+                await viewLedger(clientId);
+                window.showCustomAlert('Void Successful', 'The payment record has been deleted and the client\'s due date has been reverted.', false);
+            } else {
+                const err = await res.json();
+                window.showCustomAlert('Void Failed', err.error || 'Could not void payment.', true);
+            }
+        } catch (err) {
+            console.error('Void Error:', err);
+            window.showCustomAlert('Error', 'An error occurred while voiding.', true);
+        }
+    }
+    // --- Manual Overdue Reminders ---
+    async function sendIndividualReminder(clientId, btn) {
+        const client = window.allClients.find(c => c.id === clientId);
+        if (!client) return;
+
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner-sm"></div>';
+        btn.disabled = true;
+
+        try {
+            const companyName = localStorage.getItem('isp_brand_name') || 'SJKM NETWORK DATA LINK';
+            const res = await fetch('/api/admin/broadcast/selected', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targets: [client],
+                    subject: 'Payment Overdue Reminder',
+                    header: 'Overdue Notice',
+                    message: `${companyName}\n\nHi (get_Name),\nYour internet bill is {{days_late}} DAYS OVERDUE.\n\nPLAN: {{plan_name}} - P{{plan_price}}/mo\nDUE DATE: {{date}}\nMONTHS UNPAID: {{months_unpaid}}{{credit}}\n\nTOTAL DUE: P{{amount_due}}\n\nPlease settle your account immediately via GCash or Maya to keep your connection active. Thank you!`
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                btn.innerHTML = '✅';
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }, 2000);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (err) {
+            alert('Failed to send: ' + err.message);
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    }
+
+    async function remindAllOverdue() {
+        const overdueClients = window.currentCategoryClients || [];
+        if (overdueClients.length === 0) return;
+
+        const confirmMsg = `You are about to send Overdue Reminders to <b>${overdueClients.length} clients</b> via SMS and Email. This will use the high-speed broadcast engine. Proceed?`;
+        
+        window.showConfirm('🚀 Bulk Reminder', confirmMsg, 'Yes, Send All', async () => {
+            const btn = document.querySelector('#clientsListHeaderActions button');
+            const originalText = btn.textContent;
+            btn.textContent = '🚀 SENDING...';
+            btn.disabled = true;
+
+            try {
+                const companyName = localStorage.getItem('isp_brand_name') || 'SJKM NETWORK DATA LINK';
+                const res = await fetch('/api/admin/broadcast/selected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        targets: overdueClients,
+                        subject: 'Bulk Overdue Reminder',
+                        header: 'Overdue Notice',
+                        message: `${companyName}\n\nHi (get_Name),\nYour internet bill is {{days_late}} DAYS OVERDUE.\n\nPLAN: {{plan_name}} - P{{plan_price}}/mo\nDUE DATE: {{date}}\nMONTHS UNPAID: {{months_unpaid}}{{credit}}\n\nTOTAL DUE: P{{amount_due}}\n\nPlease settle your account immediately via GCash or Maya to keep your connection active. Thank you!`
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.textContent = '✅ ALL SENT!';
+                    btn.style.background = 'var(--success)';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '#6366f1';
+                        btn.disabled = false;
+                    }, 3000);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (err) {
+                if (window.showError) window.showError('Broadcast Failed', err.message);
+                else alert('Failed to broadcast: ' + err.message);
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+  </script>
+
+  <style>
+    .status-void { background: rgba(100, 116, 139, 0.1); color: #94a3b8; }
+    .spinner-sm {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.2);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</body>
+</html>

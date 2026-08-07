@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In to Network | Payment Required</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #6366f1;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: var(--bg); 
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 24px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+
+        .logo-circle svg { width: 40px; height: 40px; color: white; }
+
+        h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.025em; }
+        .subtitle { color: var(--text-dim); margin-bottom: 32px; font-size: 1rem; line-height: 1.5; }
+
+        .payment-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .payment-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+        }
+
+        .notice-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        .account-name { font-size: 1.25rem; font-weight: 600; margin-bottom: 4px; }
+        .account-id { color: var(--text-dim); font-size: 0.875rem; margin-bottom: 24px; }
+
+        .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+        .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+
+        .pay-method {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .pay-method:hover { border-color: var(--primary); transform: translateY(-2px); background: rgba(99, 102, 241, 0.05); }
+
+        .pay-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; text-transform: uppercase; font-weight: 600; }
+        .pay-value { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.1rem; color: #fff; }
+
+        .action-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .btn-outline { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+        .btn-outline:hover { color: white; border-color: var(--text-dim); }
+
+        .footer-text { font-size: 0.8rem; color: var(--text-dim); margin-top: 40px; }
+        .footer-text a { color: var(--primary); text-decoration: none; }
+
+        .form-group { text-align: left; margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            transition: border 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+        .form-group select option { background: #1e293b; color: #fff; }
+
+        .file-drop {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.02);
+        }
+        .file-drop:hover, .file-drop.has-file { border-color: var(--primary); color: var(--text); }
+        .file-drop input { display: none; }
+        .file-drop .fname { color: var(--primary); font-weight: 600; word-break: break-all; }
+
+        .qr-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 16px; }
+        .qr-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qr-box img { max-width: 120px; height: auto; }
+        .qr-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 6px; text-align: center; }
+
+        .alert {
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            text-align: left;
+            display: none;
+        }
+        .alert.show { display: block; }
+        .alert-success { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+        .alert-error { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+        .alert-info { background: rgba(99,102,241,0.1); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+
+        .spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.5rem; }
+            .payment-card { padding: 24px; }
+            .payment-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+<div class="logo-circle" id="companyLogo" style="width:auto; height:auto; background:transparent; box-shadow:none; border-radius:0; display:flex; align-items:center; justify-content:center; margin: 0 auto 24px;">
+            <img src="/uploads/branding/logo.png" alt="SJKM NETWORK DATA LINK Logo" style="max-height:90px; max-width:220px; object-fit:contain; border-radius:10px; box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);">
+        </div>
+        
+        <h1 id="companyName">System Notice</h1>
+        <p class="subtitle">Internet access is temporarily paused. Please settle your account to reconnect.</p>
+
+        <!-- Payment Methods -->
+        <div class="payment-card">
+            <div class="notice-badge">Payment Required</div>
+            <div class="account-name">How to Pay</div>
+            <div class="account-id">Settle your balance via GCash or Maya</div>
+
+            <div class="divider"></div>
+
+            <p style="font-size: 0.85rem; color: var(--text-dim); text-align: left;">Please send your payment to any of the following accounts, then upload your proof of payment below.</p>
+
+            <div class="payment-grid">
+                <div class="pay-method">
+                    <div class="pay-label">GCash</div>
+                    <div class="pay-value" id="gcashNumber">0938-334-6242</div>
+                    <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;" id="gcashName">Name</div>
+                </div>
+                <div class="pay-method">
+                    <div class="pay-label">Maya</div>
+                    <div class="pay-value" id="mayaNumber">0938-334-6242</div>
+                    <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;" id="mayaName">Name</div>
+                </div>
+            </div>
+
+            <div id="qrSection" class="hidden">
+                <div class="divider"></div>
+                <div class="qr-grid">
+                    <div id="gcashQrBox" class="hidden">
+                        <div>
+                            <div class="qr-box"><img id="gcashQrImg" alt="GCash QR"></div>
+                            <div class="qr-label">Scan to pay via GCash</div>
+                        </div>
+                    </div>
+                    <div id="mayaQrBox" class="hidden">
+                        <div>
+                            <div class="qr-box"><img id="mayaQrImg" alt="Maya QR"></div>
+                            <div class="qr-label">Scan to pay via Maya</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Proof of Payment -->
+        <div class="payment-card">
+            <div class="notice-badge" style="background: rgba(99,102,241,0.1); color: var(--primary);">Submit Proof of Payment</div>
+            <div class="account-name">Upload Your Receipt</div>
+            <div class="account-id" style="margin-bottom: 20px;">We'll verify and restore your connection quickly.</div>
+
+            <div id="alertBox" class="alert"></div>
+
+            <form id="proofForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="account_id">Account ID</label>
+                    <input type="text" id="account_id" name="account_id" placeholder="e.g. ACC-1001" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" placeholder="Your registered name" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Amount Paid (₱)</label>
+                    <input type="number" id="amount" name="amount" placeholder="e.g. 1299" min="1" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="method">Payment Method</label>
+                    <select id="method" name="method" required>
+                        <option value="gcash">GCash</option>
+                        <option value="maya">Maya</option>
+                        <option value="cash">Cash</option>
+                        <option value="bank">Bank Transfer</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Payment Receipt (Screenshot/Photo)</label>
+                    <div class="file-drop" id="fileDrop">
+                        <input type="file" id="receipt" name="receipt" accept="image/*,.pdf">
+                        <span id="fileDropText">📎 Tap to attach your receipt image</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="action-btn btn-primary" id="submitBtn">
+                    <span id="submitBtnText">Submit Proof of Payment</span>
+                </button>
+            </form>
+
+            <button type="button" class="action-btn btn-outline" id="checkStatusBtn">I have already submitted — Check Status</button>
+        </div>
+
+        <a href="#" class="action-btn btn-outline" id="supportBtn">Contact Support</a>
+
+        <p class="footer-text">Protected by <span id="footerBrand">ISP Monitor Admin</span></p>
+    </div>
+
+    <script>
+        // ─── Element refs ───
+        const $ = (id) => document.getElementById(id);
+        const alertBox = $('alertBox');
+        const proofForm = $('proofForm');
+        const submitBtn = $('submitBtn');
+        const submitBtnText = $('submitBtnText');
+        const fileDrop = $('fileDrop');
+        const fileDropText = $('fileDropText');
+        const receiptInput = $('receipt');
+
+        function showAlert(type, msg) {
+            alertBox.className = 'alert show alert-' + type;
+            alertBox.textContent = msg;
+        }
+
+        function clearAlert() {
+            alertBox.className = 'alert';
+            alertBox.textContent = '';
+        }
+
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            submitBtnText.innerHTML = isLoading
+                ? '<span class="spinner"></span>Submitting...'
+                : 'Submit Proof of Payment';
+        }
+
+        // ─── File drop UI ───
+        receiptInput.addEventListener('change', () => {
+            if (receiptInput.files && receiptInput.files[0]) {
+                fileDrop.classList.add('has-file');
+                fileDropText.innerHTML = '📎 <span class="fname">' + receiptInput.files[0].name + '</span>';
+            } else {
+                fileDrop.classList.remove('has-file');
+                fileDropText.textContent = '📎 Tap to attach your receipt image';
+            }
+        });
+        fileDrop.addEventListener('click', () => receiptInput.click());
+
+        // ─── Load branding settings ───
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/public/branding');
+                const data = await res.json();
+
+$('companyName').textContent = data.company_name || 'System Notice';
+                // Use dynamic logo if provided by API
+                const logoContainer = $('companyLogo');
+                const logoImg = logoContainer ? logoContainer.querySelector('img') : null;
+                if (logoContainer && logoImg && data.hero_logo_url) {
+                    logoImg.src = data.hero_logo_url;
+                }
+                $('gcashNumber').textContent = data.gcash_number || '0917-XXX-XXXX';
+                $('gcashName').textContent = data.gcash_name || '';
+                $('mayaNumber').textContent = data.maya_number || '0918-XXX-XXXX';
+                $('mayaName').textContent = data.maya_name || '';
+                $('footerBrand').textContent = data.company_name || 'ISP Monitor Admin';
+                document.title = (data.company_name || 'Sign In') + ' | Payment Required';
+
+                // QR codes
+                const qrSection = $('qrSection');
+                if (data.gcash_qr_url) {
+                    $('gcashQrImg').src = data.gcash_qr_url;
+                    $('gcashQrBox').classList.remove('hidden');
+                    qrSection.classList.remove('hidden');
+                }
+                if (data.maya_qr_url) {
+                    $('mayaQrImg').src = data.maya_qr_url;
+                    $('mayaQrBox').classList.remove('hidden');
+                    qrSection.classList.remove('hidden');
+                }
+
+                const supportBtn = $('supportBtn');
+                if (supportBtn) {
+                    if (data.facebook_url) {
+                        supportBtn.href = data.facebook_url;
+                        supportBtn.target = '_blank';
+                    } else if (data.support_phone) {
+                        supportBtn.href = 'tel:' + data.support_phone;
+                    } else if (data.support_email) {
+                        supportBtn.href = 'mailto:' + data.support_email;
+                    }
+                }
+            } catch (e) {
+                console.error('Settings load failed');
+            }
+        }
+
+        // ─── Submit proof of payment ───
+        proofForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAlert();
+
+            const accountId = $('account_id').value.trim();
+            if (!accountId) return showAlert('error', 'Please enter your Account ID.');
+
+            const formData = new FormData(proofForm);
+            setLoading(true);
+
+            try {
+                const res = await fetch('/api/public/submit-proof', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    showAlert('success', data.message || 'Payment proof submitted successfully!');
+                    proofForm.reset();
+                    fileDrop.classList.remove('has-file');
+                    fileDropText.textContent = '📎 Tap to attach your receipt image';
+                } else {
+                    showAlert('error', data.error || 'Submission failed. Please try again.');
+                }
+            } catch (err) {
+                showAlert('error', 'Network error. Please check your connection and try again.');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // ─── Check proof status ───
+        $('checkStatusBtn').addEventListener('click', async () => {
+            clearAlert();
+            const accountId = $('account_id').value.trim();
+            if (!accountId) return showAlert('error', 'Enter your Account ID first to check your status.');
+
+            $('checkStatusBtn').disabled = true;
+            try {
+                const res = await fetch('/api/public/proof-status?account_id=' + encodeURIComponent(accountId));
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    if (!data.hasProof) {
+                        showAlert('info', 'No payment proof found yet for this account. Please upload your receipt above.');
+                    } else if (data.status === 'pending_verification') {
+                        showAlert('info', 'Your payment proof is under review. Please wait — we will restore your connection shortly.');
+                    } else if (data.status === 'verified') {
+                        showAlert('success', 'Your payment is verified! Your connection should be restored. Please try reconnecting.');
+                    } else if (data.status === 'rejected') {
+                        showAlert('error', 'Your previous payment proof was rejected. Please upload a valid receipt.');
+                    } else {
+                        showAlert('info', 'Payment proof status: ' + data.status);
+                    }
+                } else {
+                    showAlert('error', data.error || 'Could not check status.');
+                }
+            } catch (err) {
+                showAlert('error', 'Network error. Please try again.');
+            } finally {
+                $('checkStatusBtn').disabled = false;
+            }
+        });
+
+        loadSettings();
+    </script>
+</body>
+</html>

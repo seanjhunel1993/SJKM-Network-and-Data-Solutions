@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Locked | OLT Monitoring</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08090f; --card: #121421; --primary: #10b981;
+      --border: rgba(255, 255, 255, 0.08); --text: #f8fafc;
+      --text-dim: #94a3b8; --danger: #ef4444; --fb: #1877F2;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg); color: var(--text);
+      height: 100vh; display: flex; align-items: center; justify-content: center;
+      background-image: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+    }
+    .lock-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 28px; padding: 40px; width: 100%; max-width: 440px; text-align: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+    }
+    .status-badge {
+        display: inline-block; padding: 6px 12px; background: rgba(239, 68, 68, 0.1);
+        color: var(--danger); border-radius: 50px; font-size: 10px; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;
+    }
+    h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; }
+    .instructions { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 25px; line-height: 1.6; }
+    .step { display: flex; align-items: center; gap: 10px; text-align: left; margin-bottom: 10px; color: var(--text); font-size: 0.8rem; }
+    .step-num { width: 18px; height: 18px; background: var(--primary); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 10px; }
+
+    .field { text-align: left; margin-bottom: 20px; }
+    .label { font-size: 0.7rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .id-display {
+      background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px;
+      border: 1px solid var(--border); font-family: monospace; color: #fbbf24; font-size: 0.8rem;
+    }
+    input {
+      width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 12px; padding: 15px; color: #fff; font-size: 28px; text-align: center; font-weight: 700;
+      letter-spacing: 8px; outline: none; transition: 0.2s;
+    }
+    input:focus { border-color: var(--primary); background: rgba(255,255,255,0.06); }
+    
+    .btn {
+      width: 100%; background: var(--primary); color: white; border: none;
+      padding: 18px; border-radius: 14px; font-weight: 800; cursor: pointer;
+      margin-bottom: 20px; transition: 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
+
+    .fb-btn {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; background: var(--fb); color: white; text-decoration: none;
+        padding: 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;
+    }
+    
+    .resend-box { margin-top: 15px; }
+    .resend-link { color: var(--text-dim); font-size: 0.75rem; cursor: pointer; text-decoration: underline; }
+    
+    .status { margin-top: 15px; font-size: 0.85rem; font-weight: 600; min-height: 20px; }
+    .error { color: var(--danger); }
+    .success { color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="lock-card">
+    <div class="status-badge">System Unauthorized</div>
+    <h1>Activation Required</h1>
+    
+    <div class="instructions">
+      <div class="step"><div class="step-num">1</div> Copy the Machine ID below.</div>
+      <div class="step"><div class="step-num">2</div> Contact the Administrator for a code.</div>
+      <div class="step"><div class="step-num">3</div> Enter the 6-digit OTP to unlock.</div>
+    </div>
+
+    <div class="field">
+      <span class="label">Machine ID (Motherboard)</span>
+      <div class="id-display" id="machineId">Loading...</div>
+    </div>
+
+    <div class="field">
+      <span class="label">Activation OTP Code</span>
+      <input type="text" id="otpInput" maxlength="6" placeholder="------">
+    </div>
+
+    <button class="btn" id="activateBtn">Verify & Activate System</button>
+    
+    <a href="https://facebook.com" target="_blank" class="fb-btn">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854V15.47H7.078V12.07h3.047V9.482c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.401h-2.796v8.454C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Contact Admin via Facebook
+    </a>
+
+    <div class="resend-box">
+        <span class="resend-link" id="resendBtn">Resend code to Admin email</span>
+    </div>
+
+    <div id="statusBox" class="status"></div>
+  </div>
+
+  <script>
+    async function init() {
+      try {
+        const r = await fetch('/api/public/license-status');
+        const d = await r.json();
+        document.getElementById('machineId').innerText = d.machineId;
+      } catch(e) { console.error(e); }
+    }
+
+    document.getElementById('activateBtn').addEventListener('click', async function() {
+      const otp = document.getElementById('otpInput').value.replace(/\s/g, '');
+      const status = document.getElementById('statusBox');
+      const btn = this;
+      if (otp.length !== 6) {
+        status.innerHTML = '<span class="error">❌ Enter 6 digits</span>';
+        return;
+      }
+      btn.disabled = true;
+      btn.innerText = 'Verifying Hardware...';
+      try {
+        const res = await fetch('/api/public/license-activate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ otp })
+        });
+        const data = await res.json();
+        if (data.success) {
+          status.innerHTML = '<span class="success">✅ Activated! Redirecting...</span>';
+          setTimeout(() => window.location.href = '/admin/login.html', 1000);
+        } else {
+          status.innerHTML = '<span class="error">❌ ' + (data.error || 'Wrong Code') + '</span>';
+          btn.disabled = false; btn.innerText = 'Verify & Activate System';
+        }
+      } catch(e) {
+        status.innerHTML = '<span class="error">📡 Connection error.</span>';
+        btn.disabled = false; btn.innerText = 'Verify & Activate System';
+      }
+    });
+
+    document.getElementById('resendBtn').addEventListener('click', async function() {
+        const status = document.getElementById('statusBox');
+        const btn = this;
+        btn.style.pointerEvents = 'none';
+        btn.innerText = 'Sending to Admin...';
+        try {
+            const res = await fetch('/api/public/resend-otp', { method: 'POST' });
+            if (res.ok) { status.innerHTML = '<span class="success">📩 Code sent to Admin!</span>'; }
+            else { status.innerHTML = '<span class="error">❌ Failed to resend.</span>'; }
+        } catch(e) { status.innerHTML = '<span class="error">📡 Connection error.</span>'; }
+        setTimeout(() => {
+            btn.style.pointerEvents = 'auto';
+            btn.innerText = "Resend code to Admin email";
+        }, 5000);
+    });
+
+    init();
+  </script>
+</body>
+</html>

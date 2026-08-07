@@ -1,0 +1,36 @@
+❌ [MIKROTIK] Connection error: MikroTik connection timeout
+[MIKROTIK] Failed to get active PPPoE: Error: MikroTik connection timeout
+    at Timeout._onTimeout (C:\Users\Administrator\Desktop\SJKM Network and Data Solutions\utils\mikrotik.js:50:33)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+📡 [MIKROTIK] Router connection error (handled): {"name":"RosException","errno":-4078}
+❌ [MIKROTIK] Connection error: MikroTik connection timeout
+[MIKROTIK] Failed to get active PPPoE: Error: MikroTik connection timeout
+    at Timeout._onTimeout (C:\Users\Administrator\Desktop\SJKM Network and Data Solutions\utils\mikrotik.js:50:33)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+📡 [MIKROTIK] Router connection error (handled): {"name":"RosException","errno":-4078}
+❌ [MIKROTIK] Connection error: MikroTik connection timeout
+[MIKROTIK] Failed to get active PPPoE: Error: MikroTik connection timeout
+    at Timeout._onTimeout (C:\Users\Administrator\Desktop\SJKM Network and Data Solutions\utils\mikrotik.js:50:33)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+📡 [MIKROTIK] Router connection error (handled): {"name":"RosException","errno":-4078}
+❌ [MIKROTIK] Connection error: MikroTik connection timeout
+[MIKROTIK] Failed to get active PPPoE: Error: MikroTik connection timeout
+    at Timeout._onTimeout (C:\Users\Administrator\Desktop\SJKM Network and Data Solutions\utils\mikrotik.js:50:33)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+📡 [MIKROTIK] Router connection error (handled): {"name":"RosException","errno":-4078}
+❌ [MIKROTIK] Connection error: MikroTik connection timeout
+[MIKROTIK] Failed to get active PPPoE: Error: MikroTik connection timeout
+    at Timeout._onTimeout (C:\Users\Administrator\Desktop\SJKM Network and Data Solutions\utils\mikrotik.js:50:33)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+📡 [MIKROTIK] Router connection error (handled): {"name":"RosException","errno":-4078}
+❌ [MIKROTIK] Connection error: MikroTik connection timeout
+[MIKROTIK] Failed to get active PPPoE: Error: MikroTik connection timeout
+    at Timeout._onTimeout (C:\Users\Administrator\Desktop\SJKM Network and Data Solutions\utils\mikrotik.js:50:33)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+📡 [MIKROTIK] Router connection error (handled): {"name":"RosException","errno":-4078}

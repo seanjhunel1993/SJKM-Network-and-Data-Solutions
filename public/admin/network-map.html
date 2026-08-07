@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Network Map | SJKM NETWORK DATA LINK Monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    .admin-container {      display: flex;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    :root {
+      --bg-primary: #08090f;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent: #2563eb;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 25px;
+      height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    #networkMap {
+      flex: 1; 
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    
+    .client-popup {
+      padding: 10px;
+      min-width: 180px;
+    }
+    
+    .client-popup h3 { 
+      margin: 0 0 8px 0; 
+      font-size: 1.1rem; 
+      font-weight: 800;
+      color: var(--text-primary); 
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 5px;
+    }
+    .client-popup p { 
+      margin: 4px 0; 
+      font-size: 0.9rem; 
+      color: var(--text-secondary); 
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .client-popup b {
+        color: var(--text-primary);
+    }
+    
+    /* Leaflet Dark Theme Overrides */
+    .leaflet-popup-content-wrapper {
+      background: rgba(15, 23, 42, 0.95) !important;
+      color: var(--text-primary) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6) !important;
+    }
+    
+    .leaflet-popup-tip {
+      background: rgba(15, 23, 42, 0.95) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .leaflet-popup-content {
+        margin: 15px !important;
+    }
+
+    .leaflet-container a.leaflet-popup-close-button {
+        color: var(--text-secondary) !important;
+        padding: 8px 8px 0 0 !important;
+    }
+
+    .client-label {
+      background: rgba(0, 0, 0, 0.85) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: white !important;
+      font-weight: 600 !important;
+      font-size: 0.8rem !important;
+      padding: 6px 12px !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+      white-space: nowrap !important;
+    }
+    
+    .client-label::before {
+      border-top-color: rgba(0, 0, 0, 0.85) !important;
+    }
+
+    /* Defensive fix for phantom boxes and focus outlines */
+    .leaflet-container:focus, 
+    .leaflet-container *:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Prevent any interactive path from showing a default black stroke */
+    path.leaflet-interactive {
+        transition: stroke-opacity 0.2s, fill-opacity 0.2s;
+    }
+
+    /* Target the phantom black boxes specifically */
+    path[stroke="black"], path[stroke="#000000"] {
+        stroke-opacity: 0 !important;
+        fill-opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    /* Pin Markers */
+    .wifi-marker {
+      transition: all 0.3s ease;
+    }
+    .wifi-marker-inner {
+      width: 24px;
+      height: 24px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 2px solid rgba(255,255,255,0.8);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      position: relative;
+    }
+    .wifi-marker-inner::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Highlight selected clients during broadcast */
+    .wifi-marker.dimmed {
+      opacity: 0.2;
+      filter: grayscale(1);
+      pointer-events: none;
+    }
+    
+    .wifi-marker.selected {
+      z-index: 2000 !important;
+    }
+    .wifi-marker.selected .wifi-marker-inner {
+      transform: scale(1.2);
+      border: 2px solid white;
+    }
+
+    /* Enhanced Maintenance Tool UI */
+    .maintenance-controls {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1100;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent);
+      padding: 0;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+      display: none;
+      flex-direction: column;
+      width: 450px;
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .maint-header {
+      padding: 15px 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .maint-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-sm:hover { background: rgba(255, 255, 255, 0.1); }
+
+    .maint-zones-list {
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .maint-zone-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      color: #94a3b8;
+    }
+    .maint-zone-item.active {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .maint-footer {
+      padding: 15px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .target-summary {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .broadcast-action-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .cancel-btn {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 15px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    /* Maintenance Tool UI */
+    .maintenance-controls {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      padding: 15px 25px;
+      border-radius: 50px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      gap: 20px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .maintenance-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s;
+    }
+    .maintenance-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+    .maintenance-btn.active { background: #2563eb; }
+
+    .radius-slider { width: 150px; cursor: pointer; }
+    
+    .maint-tool-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    .maint-tab {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #94a3b8;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .maint-tab.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    
+    #broadcastModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .maintenance-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .maintenance-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+    .maintenance-btn.active { background: #2563eb; }
+
+    /* Coverage Zone Editor */
+    .coverage-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .coverage-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+    .coverage-btn.active { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+    .coverage-panel {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      width: 320px;
+      max-height: 70vh;
+      overflow-y: auto;
+      display: none;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .coverage-panel h3 { color: #fff; margin: 0 0 5px 0; font-size: 1rem; }
+    .coverage-panel .sub { color: #64748b; font-size: 0.75rem; margin-bottom: 15px; }
+    .zone-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .zone-card .zone-info { display: flex; align-items: center; gap: 10px; }
+    .zone-card .zone-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .zone-card .zone-name { color: #e2e8f0; font-weight: 600; font-size: 0.85rem; }
+    .zone-card .zone-type { color: #64748b; font-size: 0.7rem; }
+    .zone-delete {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+      color: #ef4444; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.7rem; font-weight: 700;
+    }
+    .zone-delete:hover { background: #ef4444; color: #fff; }
+    .cov-input {
+      width: 100%; padding: 8px 12px; border-radius: 8px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: #fff; font-size: 0.85rem; outline: none; margin-top: 6px;
+    }
+    .cov-save-btn {
+      width: 100%; padding: 10px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, #10b981, #059669); color: white;
+      font-weight: 700; cursor: pointer; font-size: 0.85rem; margin-top: 12px;
+      transition: all 0.2s;
+    }
+    .cov-save-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+    .cov-save-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* --- Map Integrated Sidebar (Broadcast Mode) --- */
+    .map-context-sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 320px !important;
+      background: rgba(15, 23, 42, 0.95) !important;
+      backdrop-filter: blur(25px) !important;
+      -webkit-backdrop-filter: blur(25px) !important;
+      border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+      z-index: 9999 !important;
+      display: flex !important;
+      flex-direction: column;
+      padding: 30px 24px !important;
+      transform: translateX(-100%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 20px 0 60px rgba(0,0,0,0.6);
+      pointer-events: auto !important;
+    }
+
+    .map-context-sidebar.active {
+      transform: translateX(0);
+    }
+
+    .map-context-header {
+      margin-bottom: 24px;
+    }
+
+    .map-context-header h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.5px;
+      margin: 0 0 15px 0;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .map-context-header h3 i {
+      color: var(--accent);
+    }
+
+    .map-context-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .map-context-actions button {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .map-context-actions button:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .map-context-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .map-context-list::-webkit-scrollbar { display: block !important; width: 4px; }
+    .map-context-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+    .map-zone-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 14px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .map-zone-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: translateX(4px);
+    }
+
+    .map-zone-item.active {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .zone-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+
+    .map-zone-item.active .zone-indicator {
+      background: #fff !important;
+      box-shadow: 0 0 8px #fff;
+    }
+
+    .map-context-footer {
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .map-target-summary {
+      background: rgba(255,255,255,0.03);
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .map-target-count {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #fff;
+      display: block;
+    }
+
+    .map-target-label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-broadcast-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), #dc2626);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-broadcast-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+      filter: brightness(1.1);
+    }
+
+    .btn-map-cancel {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-map-cancel:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    /* --- Search Input Styling --- */
+    .map-context-search {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .map-context-search input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px 12px 10px 35px;
+      color: #fff;
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .map-context-search input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .map-context-search i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+      font-size: 0.8rem;
+      pointer-events: none;
+    }
+    /* --- Map Stats badges --- */
+    .map-stats {
+      display: flex;
+      gap: 8px;
+    }
+
+    .stat-badge {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+      transition: all 0.2s;
+    }
+
+    .stat-badge:hover {
+      background: rgba(15, 23, 42, 0.8);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .stat-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .stat-badge.paid .dot { background: #10b981; box-shadow: 0 0 8px #10b981; }
+    .stat-badge.overdue .dot { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+    .stat-badge.grace .dot { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+    .stat-badge.disconnected .dot { background: #ffffff; box-shadow: 0 0 8px #ffffff; }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <div id="sidebar-placeholder"></div>
+
+    <main class="main-content">
+      <header class="main-header">
+        <div class="header-left">
+          <div style="display:flex; align-items:center; gap:20px;">
+            <div>
+              <h1>Live Network Map</h1>
+              <p>Real-time visual oversight of your fiber network</p>
+            </div>
+            <button class="maintenance-btn" id="maintToggle" onclick="toggleMaintenanceMode()">
+              <i class="fas fa-bullhorn"></i>
+              <span>SELECT AREA TO BROADCAST</span>
+            </button>
+            <button class="coverage-btn" id="coverageToggle" onclick="toggleCoverageEditor()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Coverage Zone
+            </button>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="map-stats">
+            <div class="stat-badge paid">
+              <div class="dot"></div>
+              <span id="paidCount">0</span> PAID
+            </div>
+            <div class="stat-badge overdue">
+              <div class="dot"></div>
+              <span id="overdueCount">0</span> OVERDUE
+            </div>
+            <div class="stat-badge grace">
+              <div class="dot"></div>
+              <span id="dueSoonCount">0</span> DUE SOON
+            </div>
+            <div class="stat-badge disconnected">
+              <div class="dot"></div>
+              <span id="disconnectedCount">0</span> OFF
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="map-container" style="position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 20px;">
+        <div id="networkMap" style="height: 100%; width: 100%;"></div>
+
+        <!-- Integrated Broadcast Sidebar -->
+        <div id="map-broadcast-sidebar" class="map-context-sidebar">
+          <div class="map-context-header">
+            <h3><i class="fas fa-bullhorn"></i> Broadcast Select</h3>
+            <div class="map-context-search">
+              <i class="fas fa-search"></i>
+              <input type="text" id="zoneSearchInput" placeholder="Search zones..." oninput="filterZones(this.value)">
+            </div>
+            <div class="map-context-actions">
+              <button onclick="selectAllZones()">Select All</button>
+              <button onclick="clearAllZones()">Clear All</button>
+            </div>
+          </div>
+
+          <div id="mapMaintZonesList" class="map-context-list">
+            <!-- Zones injected here -->
+          </div>
+
+          <div class="map-context-footer">
+            <div class="map-target-summary">
+              <span class="map-target-count" id="mapTargetCount">0</span>
+              <span class="map-target-label">Clients Selected</span>
+            </div>
+            <button class="btn-broadcast-primary" id="mapBroadcastBtn">
+              🚀 Send Alert
+            </button>
+            <button class="btn-map-cancel" onclick="toggleMaintenanceMode()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Coverage Zone Editor Panel -->
+  <div class="coverage-panel" id="coveragePanel">
+    <h3>📍 Coverage Zone Editor</h3>
+    <p class="sub">Draw your ISP service area. Customers outside this area will be blocked from applying.</p>
+    
+    <div id="existingZones"></div>
+
+    <div id="coverageDrawSection" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+      <label style="color:#10b981; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px;">New Zone</label>
+      <input type="text" id="covZoneName" class="cov-input" placeholder="Zone name (e.g., Bago City Main)" value="Service Area">
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="maint-tab active" id="covTabPolygon" onclick="setCovMode('polygon')" style="flex:1; text-align:center;">Polygon</button>
+        <button class="maint-tab" id="covTabCircle" onclick="setCovMode('circle')" style="flex:1; text-align:center;">Circle</button>
+      </div>
+      <div id="covCircleControls" style="display:none; margin-top:10px;">
+        <div style="color:#94a3b8; font-size:0.8rem;">Radius: <span id="covRadiusVal">500</span>m</div>
+        <input type="range" id="covRadiusRange" class="radius-slider" min="100" max="10000" value="500" style="width:100%;">
+      </div>
+      <div id="covPolygonHint" style="margin-top:10px; color:#94a3b8; font-size:0.78rem; line-height:1.4;">
+        👆 Click points on the map to draw your coverage boundary. At least 3 points needed.
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
+          <div id="covPointCount" style="color:#10b981; font-weight:600;">Points: 0</div>
+          <button onclick="undoLastPoint()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#e2e8f0; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.75rem;">↩️ Undo Point</button>
+        </div>
+      </div>
+      <button class="cov-save-btn" id="covSaveBtn" onclick="saveCoverageZone()" disabled>💾 Save Coverage Zone</button>
+      <button style="width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:#94a3b8; cursor:pointer; font-size:0.8rem; margin-top:6px;" onclick="cancelCoverageDraw()">Cancel Drawing</button>
+    </div>
+
+    <button style="width:100%; padding:10px; border-radius:10px; border:1px dashed rgba(16,185,129,0.3); background:rgba(16,185,129,0.05); color:#10b981; cursor:pointer; font-size:0.85rem; font-weight:600; margin-top:12px;" id="startDrawBtn" onclick="startCoverageDraw()">+ Draw New Coverage Zone</button>
+  </div>
+
+  <!-- Broadcast Modal -->
+  <div id="broadcastModal">
+    <div style="background:#1e293b; width:100%; max-width:500px; border-radius:20px; padding:30px; border:1px solid rgba(255,255,255,0.1);">
+      <h2 style="color:white; margin-top:0;">Broadcast Maintenance Alert</h2>
+      <p style="color:#94a3b8; font-size:0.9rem;">You are sending <strong>SMS & Email</strong> to <strong id="modalTargetCount" style="color:#10b981;">0</strong> customers in the selected area.</p>
+      
+      <div style="margin-top:20px;">
+        <label style="color:#6366f1; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Message Template</label>
+        <div style="font-size:0.65rem; color:var(--accent); margin-bottom:5px; font-weight:600;">Use <b>(get_Name)</b> to insert the client's name automatically.</div>
+        <textarea id="broadcastMsg" rows="5" style="width:100%; background:#0f172a; border:1px solid #ffffff10; border-radius:12px; color:white; padding:15px; margin-top:5px; font-size:0.9rem;">Good Day! (get_Name), 
+
+Urgent Maintenance: Our team is performing emergency fiber repair in your area. You may experience temporary service interruption. We expect restoration within 2 hours. Thank you for your patience!</textarea>
+      </div>
+      
+      <div style="margin-top:25px; display:flex; gap:10px;">
+        <button class="btn" style="flex:1; background:#6366f1; color:white; padding:12px;" id="confirmBroadcast">Send SMS & Email Now</button>
+        <button class="btn" style="background:rgba(255,255,255,0.05); color:#94a3b8; padding:12px;" onclick="closeBroadcast()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="admin.js"></script>
+  <script>
+    // Initialize Dashboard Map
+    let networkMap = null;
+    let markersLayer = L.layerGroup();
+    let allClients = [];
+
+    // Maintenance Tool State
+    let isMaintenanceMode = false;
+    let targetClients = [];
+    let selectedZoneLayers = [];
+    let initialLoadComplete = false;
+
+    async function initNetworkDashboard() {
+        // Load Component
+        if (window.loadSidebar) await window.loadSidebar();
+
+        // Initialize Map centered on the region (Defaults to Manila, but will auto-zoom to clients)
+        networkMap = L.map('networkMap').setView([14.5995, 120.9842], 12);
+        
+        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google Maps',
+            maxZoom: 20
+        }).addTo(networkMap);
+
+        markersLayer.addTo(networkMap);
+
+        // Click Handler for Maintenance Tool
+        networkMap.on('click', function(e) {
+          if (!isMaintenanceMode && !isCoverageMode) return;
+          
+          if (isMaintenanceMode) {
+            // In Broadcast Mode, we only allow clicking pre-defined zones.
+            // Map background clicks are ignored to prevent accidental boxes.
+            return;
+          }
+
+          if (isCoverageMode) {
+            if (covType === 'circle') {
+              updateCovCircle(e.latlng);
+            } else {
+              addCovPoint(e.latlng);
+            }
+          }
+        });
+
+        networkMap.on('dblclick', function(e) {
+          if (!isMaintenanceMode || maintType !== 'polygon') return;
+          // Finish polygon
+        });
+
+        await loadNetworkData();
+        await loadCoverageZones();
+
+        // Attach Sidebar Broadcast Button Handler
+        const mapBroadcastBtn = document.getElementById('mapBroadcastBtn');
+        if (mapBroadcastBtn) {
+            mapBroadcastBtn.onclick = () => {
+                if (targetClients.length === 0) return alert("No clients found in this area!");
+                document.getElementById('modalTargetCount').textContent = targetClients.length;
+                document.getElementById('broadcastModal').style.display = 'flex';
+            };
+        }
+    }
+
+    // ─── PIN ICON GENERATION ───
+    function createPinIcon(color, border = 'rgba(255,255,255,0.8)') {
+      return L.divIcon({
+        className: 'wifi-marker',
+        html: `<div class="wifi-marker-inner" style="background: ${color}; border-color: ${border};"></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 24], 
+        popupAnchor: [0, -24]
+      });
+    }
+
+    const paidIcon = createPinIcon('#10b981');
+    const overdueIcon = createPinIcon('#ef4444');
+    const dueSoonIcon = createPinIcon('#f59e0b');
+    const disconnectedIcon = createPinIcon('#ffffff', '#0f172a');
+
+
+
+
+    function isPointInPolygon(latlng, layer) {
+      if (!latlng || !layer) return false;
+      
+      const px = parseFloat(latlng.lat || latlng[0]);
+      const py = parseFloat(latlng.lng || latlng[1]);
+      if (isNaN(px) || isNaN(py)) return false;
+
+      if (layer instanceof L.Circle) {
+        const dist = networkMap.distance([px, py], layer.getLatLng());
+        return dist <= layer.getRadius();
+      }
+
+      try {
+        let latlngs = layer.getLatLngs();
+        
+        // Deep flatten logic for Leaflet polygons (handles holes and multi-polygons)
+        let poly = [];
+        const flatten = (arr) => {
+            if (arr.lat && arr.lng) {
+                poly.push(arr);
+            } else if (Array.isArray(arr)) {
+                if (arr.length > 0 && (arr[0].lat || (Array.isArray(arr[0]) && arr[0].length >= 2))) {
+                    // This is a ring or a nested array
+                    arr.forEach(item => flatten(item));
+                }
+            }
+        };
+        flatten(latlngs);
+
+        if (poly.length < 3) return false;
+
+        let inside = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+          const xi = parseFloat(poly[i].lat || poly[i][0]);
+          const yi = parseFloat(poly[i].lng || poly[i][1]);
+          const xj = parseFloat(poly[j].lat || poly[j][0]);
+          const yj = parseFloat(poly[j].lng || poly[j][1]);
+          
+          const intersect = ((yi > py) !== (yj > py))
+              && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      } catch (err) {
+        console.error('PointInPoly Error:', err);
+        return false;
+      }
+    }
+
+
+    function closeBroadcast() {
+      document.getElementById('broadcastModal').style.display = 'none';
+    }
+
+    document.getElementById('confirmBroadcast').onclick = async () => {
+      const msg = document.getElementById('broadcastMsg').value;
+      const btn = document.getElementById('confirmBroadcast');
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+      
+      const targets = targetClients.map(c => ({
+        contact: c.contact,
+        email: c.email,
+        name: c.full_name
+      })).filter(t => t.contact || t.email);
+      
+      try {
+        const res = await fetch('/api/admin/broadcast/selected', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targets, message: msg })
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          alert(`Successfully broadcasted to ${data.successCount} clients!`);
+          closeBroadcast();
+          toggleMaintenanceMode();
+        } else {
+          alert("Failed to send broadcast.");
+        }
+      } catch (e) {
+        alert("Broadcast error: " + e.message);
+      }
+      btn.disabled = false;
+      btn.textContent = "Send SMS & Email Now";
+    };
+
+    async function loadNetworkData() {
+        try {
+            const response = await fetch('/api/admin/clients');
+            const clients = await response.json();
+            allClients = clients;
+            
+            markersLayer.clearLayers();
+            let paidCount = 0;
+            let overdueCount = 0;
+            let dueSoonCount = 0;
+            let disconnectedCount = 0;
+            let bounds = [];
+
+            const now = new Date();
+            now.setHours(0,0,0,0);
+            const sevenDaysLater = new Date(now);
+            sevenDaysLater.setDate(now.getDate() + 7);
+
+            clients.forEach(client => {
+                const lat = parseFloat(client.latitude);
+                const lng = parseFloat(client.longitude);
+                
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    const isDisconnected = client.status === 'disconnected' || client.status === 'disabled';
+                    const todayStr = window.getLocalDateStr ? window.getLocalDateStr() : new Date().toISOString().split('T')[0];
+                    const in7DaysStr = window.getLocalDateStr ? window.getLocalDateStr(new Date(Date.now() + 7*24*60*60*1000)) : '';
+
+                    let pinIcon = paidIcon;
+                    let statusColor = '#10b981';
+                    let statusLabel = 'PAID';
+
+                    if (isDisconnected) {
+                        pinIcon = disconnectedIcon;
+                        statusColor = '#ffffff';
+                        statusLabel = 'DISCONNECTED';
+                        disconnectedCount++;
+                    } else if (client.next_due_date && client.next_due_date < todayStr) {
+                        pinIcon = overdueIcon;
+                        statusColor = '#ef4444';
+                        statusLabel = 'OVERDUE';
+                        overdueCount++;
+                    } else if (client.next_due_date && client.next_due_date <= in7DaysStr) {
+                        pinIcon = dueSoonIcon;
+                        statusColor = '#f59e0b';
+                        statusLabel = 'DUE SOON';
+                        dueSoonCount++;
+                    } else {
+                        paidCount++;
+                    }
+                    
+                    const marker = L.marker([lat, lng], { icon: pinIcon });
+                    marker.clientData = client; // Store reference for selection feedback
+
+                    // 🏷️ ADD PERMANENT NAME LABEL
+                    marker.bindTooltip(client.full_name, {
+                        permanent: true,
+                        direction: 'top',
+                        offset: [0, -25],
+                        className: 'client-label'
+                    });
+
+                    marker.bindPopup(`
+                <div class="client-popup">
+                    <h3>${client.full_name}</h3>
+                    <p><span>Account:</span> <b>${client.account_id}</b></p>
+                    <p><span>Billing:</span> <b style="color:${statusColor}">${statusLabel}</b></p>
+                    <p><span>Due Date:</span> <b>${window.formatDate ? window.formatDate(client.next_due_date) : client.next_due_date}</b></p>
+                    <p><span>Plan:</span> <b>${client.plan || 'N/A'}</b></p>
+                    <div style="margin-top:12px; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
+                        <button onclick="window.location.href='clients.html?id=${client.id}'" class="btn-primary" style="padding: 10px 16px; font-size: 0.85rem; border-radius: 8px; width: 100%;">
+                            Open Client Profile
+                        </button>
+                    </div>
+                </div>
+            `, {
+                maxWidth: 250,
+                className: 'custom-popup'
+            });
+                    markersLayer.addLayer(marker);
+                    bounds.push([client.latitude, client.longitude]);
+                }
+            });
+
+            document.getElementById('paidCount').textContent = paidCount;
+            document.getElementById('overdueCount').textContent = overdueCount;
+            document.getElementById('dueSoonCount').textContent = dueSoonCount;
+            document.getElementById('disconnectedCount').textContent = disconnectedCount;
+
+            // Auto-zoom to fit all clients (Only on first load)
+            if (bounds.length > 0 && !initialLoadComplete) {
+                networkMap.fitBounds(bounds, { padding: [50, 50] });
+                initialLoadComplete = true;
+            }
+
+        } catch (error) {
+            console.error('Failed to load network map data:', error);
+        }
+    }
+
+    // Refresh data every 30 seconds
+    setInterval(loadNetworkData, 30000);
+
+    // ─── COVERAGE ZONE EDITOR ───
+    let isCoverageMode = false;
+    let covType = 'polygon';
+    let covCircle = null;
+    let covPolygon = null;
+    let covPoints = [];
+    let covZoneLayers = [];  // Visual overlays for saved zones
+
+    function toggleCoverageEditor() {
+      const panel = document.getElementById('coveragePanel');
+      const btn = document.getElementById('coverageToggle');
+      const isOpen = panel.style.display === 'block';
+      
+      panel.style.display = isOpen ? 'none' : 'block';
+      btn.classList.toggle('active', !isOpen);
+      
+      if (!isOpen) {
+        loadCoverageZones();
+      } else {
+        cancelCoverageDraw();
+      }
+    }
+
+    function toggleMaintenanceMode() {
+      isMaintenanceMode = !isMaintenanceMode;
+      const mapSidebar = document.getElementById('map-broadcast-sidebar');
+      const maintBtn = document.getElementById('maintToggle');
+      const btnSpan = maintBtn.querySelector('span');
+      const btnIcon = maintBtn.querySelector('i');
+
+      if (isMaintenanceMode) {
+        if (mapSidebar) mapSidebar.classList.add('active');
+        maintBtn.classList.add('active');
+        if (btnSpan) btnSpan.textContent = 'CANCEL BROADCAST MODE';
+        if (btnIcon) {
+            btnIcon.className = 'fas fa-times';
+        }
+        updateMaintZonesList();
+        recalculateTargets();
+      } else {
+        if (mapSidebar) mapSidebar.classList.remove('active');
+        maintBtn.classList.remove('active');
+        if (btnSpan) btnSpan.textContent = 'SELECT AREA TO BROADCAST';
+        if (btnIcon) {
+            btnIcon.className = 'fas fa-bullhorn';
+        }
+
+        // Reset zone styles
+        covZoneLayers.forEach(l => {
+          l.setStyle({ fillOpacity: 0.08, weight: 2, color: l.options.originalColor || '#10b981' });
+        });
+
+        targetClients = [];
+        selectedZoneLayers = [];
+        const mapTargetCount = document.getElementById('mapTargetCount');
+        if (mapTargetCount) mapTargetCount.textContent = '0';
+        
+        // Remove highlighting from markers
+        markersLayer.eachLayer(marker => {
+          const el = marker.getElement();
+          if (el) el.classList.remove('selected', 'dimmed');
+        });
+      }
+    }
+
+
+
+
+    function filterZones(query) {
+      updateMaintZonesList(query);
+    }
+
+    function updateMaintZonesList(filter = '') {
+      const list = document.getElementById('mapMaintZonesList');
+      if (!list) return;
+      
+      const query = filter.toLowerCase();
+      const filtered = covZoneLayers.filter(layer => {
+        return layer.zoneData.name.toLowerCase().includes(query);
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b; font-size:0.8rem;">No zones match "${filter}"</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(layer => {
+        const z = layer.zoneData;
+        const isActive = selectedZoneLayers.includes(layer);
+        return `
+          <div class="map-zone-item ${isActive ? 'active' : ''}" onclick="selectClientsInZone(${z.id}, null, true)">
+            <div class="zone-indicator" style="background:${isActive ? '#fff' : (z.color || '#10b981')};"></div>
+            ${z.name}
+          </div>
+        `;
+      }).join('');
+    }
+
+
+
+    window.selectAllZones = () => {
+      selectedZoneLayers = [...covZoneLayers];
+      covZoneLayers.forEach(layer => {
+        layer.setStyle({ fillOpacity: 0.3, weight: 4, color: '#ef4444' });
+      });
+      updateMaintZonesList();
+      recalculateTargets();
+    };
+
+    window.clearAllZones = () => {
+      selectedZoneLayers = [];
+      covZoneLayers.forEach(layer => {
+        layer.setStyle({ fillOpacity: 0.08, weight: 2, color: layer.options.originalColor || '#10b981' });
+      });
+      updateMaintZonesList();
+      recalculateTargets();
+    };
+
+    function selectClientsInZone(zoneOrId, layer, fromList = false) {
+      if (fromList) {
+        layer = covZoneLayers.find(l => l.zoneData.id === zoneOrId);
+      }
+      
+      if (!layer) return;
+
+      const index = selectedZoneLayers.indexOf(layer);
+      
+      if (index > -1) {
+        // Deselect
+        selectedZoneLayers.splice(index, 1);
+        layer.setStyle({ fillOpacity: 0.08, weight: 2, color: layer.options.originalColor || '#10b981' });
+      } else {
+        // Select
+        selectedZoneLayers.push(layer);
+        layer.setStyle({ fillOpacity: 0.3, weight: 4, color: '#ef4444' });
+      }
+
+      updateMaintZonesList();
+      recalculateTargets();
+    }
+
+    function recalculateTargets() {
+      const uniqueTargets = new Map();
+
+      selectedZoneLayers.forEach(layer => {
+        const zone = layer.zoneData;
+        let zoneTargets = [];
+
+        if (zone.type === 'circle') {
+          const center = [zone.center_lat, zone.center_lng];
+          const radius = zone.radius;
+          zoneTargets = allClients.filter(c => {
+            if (!c.latitude || !c.longitude) return false;
+            return networkMap.distance(center, [c.latitude, c.longitude]) <= radius;
+          });
+        } else {
+          zoneTargets = allClients.filter(c => {
+            if (!c.latitude || !c.longitude) return false;
+            return isPointInPolygon({lat: parseFloat(c.latitude), lng: parseFloat(c.longitude)}, layer);
+          });
+        }
+
+        zoneTargets.forEach(c => uniqueTargets.set(c.id, c));
+      });
+
+      targetClients = Array.from(uniqueTargets.values());
+
+      const targetIds = new Set(targetClients.map(c => c.id));
+
+      // 🔦 Visual Feedback: Dim non-selected clients and highlight selected ones
+      markersLayer.eachLayer(marker => {
+        if (!marker.clientData) return;
+        
+        const el = marker.getElement();
+        if (!el) return;
+
+        if (isMaintenanceMode) {
+          if (targetIds.has(marker.clientData.id)) {
+            el.classList.add('selected');
+            el.classList.remove('dimmed');
+          } else {
+            el.classList.add('dimmed');
+            el.classList.remove('selected');
+          }
+        } else {
+          el.classList.remove('selected', 'dimmed');
+        }
+      });
+
+      const mapTargetCount = document.getElementById('mapTargetCount');
+      if (mapTargetCount) mapTargetCount.textContent = targetClients.length;
+      
+      const broadcastBtn = document.getElementById('mapBroadcastBtn');
+      if (broadcastBtn) {
+          broadcastBtn.innerHTML = `🚀 Broadcast to <b>${targetClients.length}</b> Clients`;
+      }
+    }
+
+
+    async function loadCoverageZones() {
+      try {
+        const res = await fetch('/api/admin/coverage-zones');
+        const zones = await res.json();
+        
+        // Clear old overlays
+        covZoneLayers.forEach(l => l.remove());
+        covZoneLayers = [];
+        
+        const container = document.getElementById('existingZones');
+        
+        if (zones.length === 0) {
+          container.innerHTML = '<div style="text-align:center; padding:20px; color:#475569; font-size:0.8rem;">No coverage zones defined yet.<br>Draw one to start blocking out-of-area applications.</div>';
+          return;
+        }
+        
+        container.innerHTML = zones.map(z => `
+          <div class="zone-card">
+            <div class="zone-info">
+              <div class="zone-dot" style="background:${z.color || '#6366f1'}"></div>
+              <div>
+                <div class="zone-name">${z.name}</div>
+                <div class="zone-type">${z.type === 'polygon' ? `Polygon (${z.coordinates.length} pts)` : `Circle (${z.radius}m)`}</div>
+              </div>
+            </div>
+            <button class="zone-delete" onclick="deleteCoverageZone(${z.id})">Delete</button>
+          </div>
+        `).join('');
+        
+        // Draw saved zones on map
+        zones.forEach(z => {
+          let layer;
+          if (z.type === 'polygon' && z.coordinates && z.coordinates.length >= 3) {
+            layer = L.polygon(z.coordinates, {
+              color: z.color || '#10b981',
+              originalColor: z.color || '#10b981',
+              fillColor: z.color || '#10b981',
+              fillOpacity: 0.08,
+              weight: 2,
+              dashArray: '8, 6',
+              interactive: true
+            }).addTo(networkMap);
+            layer.bindTooltip(`<strong>${z.name}</strong><br>Click to select for broadcast`, { sticky: true, className: 'client-label' });
+          } else if (z.type === 'circle' && z.center_lat && z.center_lng) {
+            layer = L.circle([z.center_lat, z.center_lng], {
+              radius: z.radius,
+              color: z.color || '#10b981',
+              originalColor: z.color || '#10b981',
+              fillColor: z.color || '#10b981',
+              fillOpacity: 0.08,
+              weight: 2,
+              dashArray: '8, 6',
+              interactive: true
+            }).addTo(networkMap);
+            layer.bindTooltip(`<strong>${z.name}</strong><br>Click to select for broadcast`, { sticky: true, className: 'client-label' });
+          }
+          
+          if (layer) {
+            layer.zoneData = z; // Attach zone data for multi-select logic
+            layer.on('click', (e) => {
+              if (isMaintenanceMode) {
+                L.DomEvent.stopPropagation(e);
+                selectClientsInZone(z, layer);
+              }
+            });
+            covZoneLayers.push(layer);
+          }
+        });
+      } catch (e) {
+        console.error('Coverage load error:', e);
+      }
+    }
+
+    function startCoverageDraw() {
+      isCoverageMode = true;
+      document.getElementById('coverageDrawSection').style.display = 'block';
+      document.getElementById('startDrawBtn').style.display = 'none';
+      networkMap.getContainer().style.cursor = 'crosshair';
+      networkMap.doubleClickZoom.disable();
+      covPoints = [];
+      if (covPolygon) covPolygon.remove();
+      if (covCircle) covCircle.remove();
+      covPolygon = null;
+      covCircle = null;
+      document.getElementById('covPointCount').textContent = 'Points: 0';
+      document.getElementById('covSaveBtn').disabled = true;
+    }
+
+    function cancelCoverageDraw() {
+      isCoverageMode = false;
+      document.getElementById('coverageDrawSection').style.display = 'none';
+      document.getElementById('startDrawBtn').style.display = 'block';
+      networkMap.getContainer().style.cursor = '';
+      networkMap.doubleClickZoom.enable();
+      covPoints = [];
+      if (covPolygon) covPolygon.remove();
+      if (covCircle) covCircle.remove();
+      covPolygon = null;
+      covCircle = null;
+    }
+
+    function setCovMode(type) {
+      covType = type;
+      document.getElementById('covTabPolygon').classList.toggle('active', type === 'polygon');
+      document.getElementById('covTabCircle').classList.toggle('active', type === 'circle');
+      document.getElementById('covCircleControls').style.display = type === 'circle' ? 'block' : 'none';
+      document.getElementById('covPolygonHint').style.display = type === 'polygon' ? 'block' : 'none';
+      
+      covPoints = [];
+      if (covPolygon) covPolygon.remove();
+      if (covCircle) covCircle.remove();
+      covPolygon = null;
+      covCircle = null;
+      document.getElementById('covPointCount').textContent = 'Points: 0';
+      document.getElementById('covSaveBtn').disabled = true;
+    }
+
+    function undoLastPoint() {
+      if (!isCoverageMode || covType !== 'polygon' || covPoints.length === 0) return;
+      covPoints.pop();
+      if (covPoints.length === 0) {
+        if (covPolygon) { covPolygon.remove(); covPolygon = null; }
+      } else {
+        covPolygon.setLatLngs(covPoints);
+      }
+      document.getElementById('covPointCount').textContent = `Points: ${covPoints.length}`;
+      document.getElementById('covSaveBtn').disabled = covPoints.length < 3;
+    }
+
+    async function saveCoverageZone() {
+      const name = document.getElementById('covZoneName').value.trim() || 'Service Area';
+      const btn = document.getElementById('covSaveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        const body = { name, type: covType, color: '#10b981' };
+        if (covType === 'polygon') {
+          if (covPoints.length < 3) return alert('Draw at least 3 points!');
+          body.coordinates = covPoints;
+        } else {
+          if (!covCircle) return alert('Click on the map to set the center!');
+          const center = covCircle.getLatLng();
+          body.center_lat = center.lat;
+          body.center_lng = center.lng;
+          body.radius = covCircle.getRadius();
+        }
+        const res = await fetch('/api/admin/coverage-zones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) { cancelCoverageDraw(); loadCoverageZones(); }
+        else { const err = await res.json(); alert('Error: ' + err.error); }
+      } catch (e) { alert('Save failed: ' + e.message); }
+      btn.disabled = false;
+      btn.textContent = '💾 Save Coverage Zone';
+    }
+
+    async function deleteCoverageZone(id) {
+      if (!confirm('Delete this coverage zone? Customers will no longer be blocked from this area.')) return;
+      try {
+        await fetch(`/api/admin/coverage-zones/${id}`, { method: 'DELETE' });
+        loadCoverageZones();
+      } catch (e) { alert('Delete failed.'); }
+    }
+
+    function updateCovCircle(latlng) {
+      const radius = parseInt(document.getElementById('covRadiusRange').value);
+      if (covCircle) {
+        covCircle.setLatLng(latlng);
+        covCircle.setRadius(radius);
+      } else {
+        covCircle = L.circle(latlng, {
+          radius: radius,
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.15,
+          weight: 3,
+          dashArray: '5, 5'
+        }).addTo(networkMap);
+      }
+      document.getElementById('covSaveBtn').disabled = false;
+    }
+
+    function addCovPoint(latlng) {
+      covPoints.push([latlng.lat, latlng.lng]);
+      if (covPolygon) {
+        covPolygon.setLatLngs(covPoints);
+      } else {
+        covPolygon = L.polygon(covPoints, {
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.15,
+          weight: 3,
+          dashArray: '5, 5'
+        }).addTo(networkMap);
+      }
+      document.getElementById('covPointCount').textContent = `Points: ${covPoints.length}`;
+      document.getElementById('covSaveBtn').disabled = covPoints.length < 3;
+    }
+
+    document.addEventListener('DOMContentLoaded', initNetworkDashboard);
+  </script>
+</body>
+</html>

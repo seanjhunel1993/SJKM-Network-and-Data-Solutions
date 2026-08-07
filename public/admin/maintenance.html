@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance | JKL FIBER Monitoring Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script>
+    // Critical Pre-render Branding
+    (function () {
+      const cachedBrand = localStorage.getItem('isp_brand_name');
+      const cachedLogo = localStorage.getItem('isp_brand_logo');
+      const cachedAdmin = localStorage.getItem('isp_admin_name');
+      if (cachedBrand || cachedLogo || cachedAdmin) {
+        const style = document.createElement('style');
+        let styleContent = '.logo-flicker-fix { opacity: 0; }';
+        if (cachedAdmin) {
+          styleContent += ` #adminName:empty::before { content: "${cachedAdmin}"; }`;
+          styleContent += ` .admin-avatar:empty::before { content: "${cachedAdmin.charAt(0).toUpperCase()}"; }`;
+        }
+        style.innerHTML = styleContent;
+        document.head.appendChild(style);
+      }
+    })();
+  </script>
+</head>
+
+<body data-page="maintenance">
+  <!-- Dynamic Sidebar Placeholder -->
+  <div id="sidebar-placeholder"></div>
+
+  <div class="mobile-header">
+    <button class="hamburger" id="menuToggle"><span></span><span></span><span></span></button>
+    <h1><span class="brand-text"></span><small>Monitoring</small></h1>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>System Maintenance</h1>
+        <p class="page-subtitle">Manage database health, backups, and system security</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+      <!-- Backup Section -->
+      <div class="card maintenance-card">
+        <div class="card-header">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="padding:8px; background:rgba(99, 102, 241, 0.1); color:var(--primary); border-radius:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:24px;height:24px">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </div>
+            <h2>Database Backup</h2>
+          </div>
+        </div>
+        <div class="card-body" style="padding:1.5rem;">
+          <p style="color:var(--text-dim); font-size:0.85rem; margin-bottom:20px;">Management of the SMS resilience
+            queue and system-wide date integrity.</p>
+
+
+          <div
+            style="background:rgba(255,165,0,0.1); border-left:4px solid orange; padding:12px; margin-bottom:20px; border-radius:4px;">
+            <div style="font-weight:700; color:orange; margin-bottom:4px;">⚠️ DATE INTEGRITY TOOL</div>
+            <div style="font-size:0.75rem; color:var(--text-dim);">If you notice "Future dates" (e.g. 2027) in SMS or
+              logs, use this tool to reset all clients to a sane baseline.</div>
+            <button onclick="repairDueDates()" class="btn-primary"
+              style="margin-top:10px; padding:6px 12px; font-size:0.75rem; background:orange;">Repair All Due
+              Dates</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+            <div
+              style="background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; border:1px solid var(--border);">
+              <label
+                style="display:block; font-size:0.6rem; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Size</label>
+              <div id="statDbSize" style="font-weight:700; font-size:0.95rem; color:var(--text-main);">0.00 KB</div>
+            </div>
+            <div
+              style="background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; border:1px solid var(--border);">
+              <label
+                style="display:block; font-size:0.6rem; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Last
+                Backup</label>
+              <div id="statLastBackup" style="font-weight:700; font-size:0.95rem; color:var(--success);">TODAY</div>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button id="btnMainBackup" class="btn btn-primary" style="width:100%; justify-content:center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:16px;height:16px;margin-right:8px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download .JSON Backup
+            </button>
+            <button id="btnEmailBackup" class="btn btn-secondary"
+              style="width:100%; justify-content:center; background:transparent; border:1px solid var(--accent); color:var(--accent);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:16px;height:16px;margin-right:8px;">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              Send Backup to Gmail
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Restore Section -->
+      <div class="card maintenance-card">
+        <div class="card-header">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="padding:8px; background:rgba(239, 68, 68, 0.1); color:var(--danger); border-radius:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:24px;height:24px">
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+            </div>
+            <h2>Restore System</h2>
+          </div>
+        </div>
+        <div class="card-body" style="padding:1.5rem;">
+          <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:1.5rem;">Upload a previously saved backup to
+            restore all data. <span style="color:var(--danger); font-weight:600;">Warning: This will overwrite your
+              current database!</span></p>
+          <input type="file" id="mainRestoreInput" accept=".json,.sqlite" style="display:none;" />
+          <button id="btnMainRestore" class="btn btn-danger"
+            style="width:100%; justify-content:center; border:1px solid var(--danger); background:transparent; color:var(--danger);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              style="width:16px;height:16px;margin-right:8px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Upload & Restore Data
+          </button>
+          
+          <div style="margin-top: 2rem;">
+            <h3 style="margin-top:0; font-size:1rem; color:var(--text-main); margin-bottom: 15px;">Manual Operations</h3>
+            <div
+              style="background:rgba(16,185,129,0.1); border-left:4px solid var(--success); padding:12px; margin-bottom:20px; border-radius:4px;">
+              <div style="font-weight:700; color:var(--success); margin-bottom:4px;">🚀 BILLING ENGINE CONTROL</div>
+              <div style="font-size:0.75rem; color:var(--text-dim);">The system checks automatically. Click below to run a manual billing scan and dispatch SMS/Emails immediately.</div>
+              <button onclick="runBillingScan()" class="btn-primary"
+                style="margin-top:10px; padding:6px 12px; font-size:0.75rem; background:var(--success);">Run Billing Scan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: Live Feed (New) -->
+    <div id="viewBroadcastLogs" class="broadcast-view" style="display:none;">
+      <div class="table-container"
+        style="border:1px solid var(--border); border-radius:12px; max-height: 400px; overflow-y: auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead style="background:rgba(255,255,255,0.02); position:sticky; top:0; z-index:10;">
+            <tr>
+              <th
+                style="padding:12px; text-align:left; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">
+                Recipient</th>
+              <th
+                style="padding:12px; text-align:left; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">
+                Channel</th>
+              <th
+                style="padding:12px; text-align:left; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">
+                Status</th>
+              <th
+                style="padding:12px; text-align:right; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">
+                Time</th>
+            </tr>
+          </thead>
+          <tbody id="dispatchFeedTbody">
+            <!-- Populated via admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- View: History -->
+    <div id="viewBroadcastHistory" class="broadcast-view" style="display:none;">
+      <div class="table-container" style="border:1px solid var(--border); border-radius:12px;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead style="background:rgba(255,255,255,0.02);">
+            <tr>
+              <th style="padding:12px; text-align:left; font-size:0.75rem; color:var(--text-muted);">DATE</th>
+              <th style="padding:12px; text-align:left; font-size:0.75rem; color:var(--text-muted);">TITLE</th>
+              <th style="padding:12px; text-align:left; font-size:0.75rem; color:var(--text-muted);">TARGET</th>
+              <th style="padding:12px; text-align:right; font-size:0.75rem; color:var(--text-muted);">SENT</th>
+            </tr>
+          </thead>
+          <tbody id="broadcastHistoryTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="viewPortalNotices" style="display:none"></div>
+
+  </main>
+
+  <style>
+    .maintenance-card {
+      transition: transform 0.2s;
+    }
+
+    .maintenance-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger) !important;
+      color: white !important;
+    }
+  </style>
+
+  <script src="admin.js"></script>
+
+</body>
+
+</html>

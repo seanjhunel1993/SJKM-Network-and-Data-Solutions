@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom React App | SJKM NETWORK DATA LINK Admin</title>
+  
+  <!-- Mga kailangang CSS at Fonts para makuha ang itsura ng ISP System -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    /* Kung may sariling styling ang React app mo, pwede mo itong idagdag dito */
+    #root {
+      margin-top: 20px;
+      background: var(--surface);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <!-- DITO PAPASOK YUNG SIDEBAR MENU MO OTOMATIKO -->
+  <div id="sidebar-placeholder"></div>
+
+  <!-- HEADER PARA SA MOBILE PHONES -->
+  <div class="mobile-header">
+    <button class="hamburger" id="menuToggle">
+      <span></span><span></span><span></span>
+    </button>
+    <h1><span class="brand-text"></span><small>Custom App</small></h1>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- DITO YUNG MAIN CONTENT AREA -->
+  <main class="main-content">
+    
+    <!-- HEADER NG PAGE MO -->
+    <div class="page-header">
+      <div>
+        <h1>My React Layout</h1>
+        <p class="page-subtitle">Ito ang custom page ko gamit ang React</p>
+      </div>
+    </div>
+
+    <!-- DITO LALABAS YUNG REACT APP MO -->
+    <div id="root">
+        <!-- Ang React magre-render dito -->
+    </div>
+
+  </main>
+
+  <!-- IMPORTANTENG SCRIPT PARA GUMANA ANG SIDEBAR -->
+  <script src="admin.js"></script>
+
+  <!-- I-PASTE MO DITO YUNG NAPAKAHABANG REACT SCRIPT CODE MO KANINA -->
+  <script>
+    // Example: Dito mo ipa-paste yung buong "window.__MANUS_HOST_DEV__ = false; (function(){"use strict"..." code
+    // Pinalitan ko muna ng simpleng message para makita mong gumagana.
+    
+    document.getElementById('root').innerHTML = "<h2>Loading React App...</h2><p>Kung makikita mo ito, gumagana yung layout. I-paste mo na yung buong React script code mo sa ibaba (sa loob ng source file) para umandar!</p>";
+  </script>
+
+</body>
+</html>

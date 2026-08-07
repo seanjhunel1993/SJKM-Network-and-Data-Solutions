@@ -1,0 +1,16 @@
+{
+  "ignore": [
+    "data/*.json",
+    "public/*",
+    "node_modules",
+    ".git"
+  ],
+  "watch": [
+    "server.js",
+    "routes/",
+    "utils/",
+    "mikrotik.js",
+    "database.js"
+  ],
+  "ext": "js,json,html,css"
+}

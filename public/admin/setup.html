@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>First-Time Setup | ISP Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #2563eb;
+      --accent-glow: rgba(37, 99, 235, 0.35);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #060912;
+      --card: rgba(17,24,39,0.85);
+      --border: rgba(255,255,255,0.08);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --font: 'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse at 0% 0%, rgba(37, 99, 235, 0.15) 0%, transparent 55%),
+        radial-gradient(ellipse at 100% 100%, rgba(16,185,129,0.08) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ═══ Layout ═══ */
+    .wizard {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 920px;
+      background: var(--card);
+      backdrop-filter: blur(32px) saturate(180%);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: 0 60px 120px -20px rgba(0,0,0,0.9);
+      display: flex;
+      overflow: hidden;
+      min-height: 600px;
+      animation: wizardIn 0.7s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    @keyframes wizardIn {
+      from { transform: translateY(40px) scale(0.96); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    /* ═══ Sidebar ═══ */
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.25);
+      border-right: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 2.5rem;
+    }
+    .sidebar-logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-logo-icon svg { width: 22px; height: 22px; color: white; }
+    .sidebar-logo h2 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
+    .sidebar-logo small { display: block; font-size: 0.7rem; color: var(--muted); font-weight: 400; }
+
+    .steps-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .step-nav-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      cursor: default;
+      transition: all 0.3s;
+      opacity: 0.35;
+    }
+    .step-nav-item.active { background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.25); opacity: 1; }
+    .step-nav-item.done { opacity: 0.7; }
+
+    .step-nav-num {
+      width: 30px; height: 30px; border-radius: 9px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 800;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+    .step-nav-item.active .step-nav-num { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 18px var(--accent-glow); }
+    .step-nav-item.done .step-nav-num { background: var(--success); border-color: var(--success); color: white; }
+    .step-nav-item.done .step-nav-num::after { content: '✓'; font-size: 0.9rem; }
+    .step-nav-item.done .step-nav-num-text { display: none; }
+
+    .step-nav-label { font-size: 0.85rem; font-weight: 600; }
+    .step-nav-desc { font-size: 0.7rem; color: var(--muted); }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.72rem; color: var(--muted); line-height: 1.6;
+    }
+
+    /* ═══ Content ═══ */
+    .content {
+      flex: 1;
+      padding: 3rem 3.5rem;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .step-pane { display: none; flex-direction: column; flex: 1; animation: paneIn 0.4s ease; }
+    .step-pane.active { display: flex; }
+
+    @keyframes paneIn {
+      from { transform: translateX(16px); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+
+    .step-eyebrow {
+      font-size: 0.7rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--accent); margin-bottom: 0.5rem;
+    }
+    .step-title { font-size: 1.9rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+    .step-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.65; margin-bottom: 2rem; }
+
+    /* ═══ Forms ═══ */
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .field { margin-bottom: 1.25rem; }
+    .field label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.7rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .field label .badge-optional {
+      font-size: 0.6rem; font-weight: 600;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 6px;
+      text-transform: none; letter-spacing: 0;
+      color: var(--muted);
+    }
+
+    .field input, .field select, .field textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1.5px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.93rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
+    }
+    .field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,0.2); }
+    .field select { cursor: pointer; appearance: none; }
+    .field-note { font-size: 0.72rem; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+
+    /* Password toggle wrapper */
+    .pass-wrap { position: relative; }
+    .pass-wrap input { padding-right: 44px; }
+    .pass-toggle {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted); cursor: pointer; padding: 0;
+    }
+
+    /* ═══ Discovery List ═══ */
+    .discovery-box {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-bottom: 1.25rem;
+    }
+    .discovery-box::-webkit-scrollbar { width: 4px; }
+    .discovery-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    .neighbor-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .neighbor-row:last-child { border-bottom: none; }
+    .neighbor-row:hover { background: rgba(99,102,241,0.07); }
+    .neighbor-row-info h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 2px; }
+    .neighbor-row-info span { font-size: 0.75rem; color: var(--muted); font-family: monospace; }
+    .neighbor-row-select {
+      margin-left: auto; flex-shrink: 0;
+      background: rgba(37, 99, 235, 0.12);
+      color: #3b82f6; border: 1px solid rgba(37, 99, 235, 0.3);
+      border-radius: 8px; padding: 5px 14px;
+      font-size: 0.75rem; font-weight: 700;
+      font-family: var(--font); cursor: pointer;
+    }
+    .neighbor-row-select:hover { background: rgba(37, 99, 235, 0.25); color: #fff; }
+
+    /* ═══ Test Result Banner ═══ */
+    .test-result {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      font-size: 0.88rem; font-weight: 600;
+    }
+    .test-result.success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #6ee7b7; display: flex; }
+    .test-result.error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.25);  color: #fca5a5; display: flex; }
+    .test-result.info    { background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.25); color: #93c5fd; display: flex; }
+
+    /* ═══ Health Checks ═══ */
+    .health-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .health-dot {
+      width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+      background: var(--warning); box-shadow: 0 0 8px rgba(245,158,11,0.5);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    .health-dot.ok  { background: var(--success); box-shadow: 0 0 8px rgba(16,185,129,0.5); animation: none; }
+    .health-dot.err { background: var(--danger);  box-shadow: 0 0 8px rgba(239,68,68,0.5);  animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+    .health-item-text { font-size: 0.9rem; font-weight: 700; }
+    .health-item-sub  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* ═══ Plan Cards ═══ */
+    .plan-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 1rem; }
+    .plan-card {
+      padding: 14px 16px;
+      background: rgba(0,0,0,0.2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .plan-card:hover { border-color: rgba(37, 99, 235, 0.4); background: rgba(37, 99, 235, 0.06); }
+    .plan-card.selected { border-color: var(--accent); background: rgba(37, 99, 235, 0.1); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .plan-card-name { font-weight: 800; font-size: 0.9rem; margin-bottom: 2px; }
+    .plan-card-speed { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+    .plan-card-price { font-size: 1.1rem; font-weight: 900; color: var(--accent); }
+
+    /* ═══ Actions ═══ */
+    .actions {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-family: var(--font); font-size: 0.9rem; font-weight: 700;
+      cursor: pointer; border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: white;
+      box-shadow: 0 8px 20px -6px var(--accent-glow);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -6px var(--accent-glow); }
+    .btn-primary:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent; color: var(--muted);
+      border: 1.5px solid var(--border);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .btn-outline-green {
+      background: rgba(16,185,129,0.1); color: #6ee7b7;
+      border: 1.5px solid rgba(16,185,129,0.3);
+    }
+    .btn-outline-green:hover { background: rgba(16,185,129,0.2); }
+    .btn-sm { padding: 8px 16px; font-size: 0.82rem; border-radius: 9px; }
+
+    .skip-link {
+      font-size: 0.8rem; color: var(--muted);
+      background: none; border: none; cursor: pointer;
+      font-family: var(--font); text-decoration: underline;
+      transition: color 0.2s;
+    }
+    .skip-link:hover { color: var(--text); }
+
+    /* ═══ Success Screen ═══ */
+    .success-screen {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 2rem 0; flex: 1;
+    }
+    .success-icon {
+      width: 90px; height: 90px;
+      background: linear-gradient(135deg, var(--success), #059669);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 50px rgba(16,185,129,0.4);
+      animation: popIn 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .success-icon svg { width: 44px; height: 44px; color: white; }
+    .success-title { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .success-sub { color: var(--muted); font-size: 0.95rem; line-height: 1.65; max-width: 420px; margin-bottom: 2rem; }
+
+    .summary-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 2rem; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 14px;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .chip.green { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .chip.indigo { background: rgba(37, 99, 235, 0.08); border-color: rgba(37, 99, 235, 0.2); color: #93c5fd; }
+    .chip.yellow { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); color: #fde68a; }
+
+    /* ═══ WinBox Guide Card ═══ */
+    .guide-card {
+      background: rgba(245,158,11,0.06);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 1rem;
+      font-size: 0.82rem; color: #fde68a;
+      line-height: 1.65;
+    }
+    .guide-card strong { display: block; margin-bottom: 4px; font-size: 0.85rem; }
+
+    /* Copy script box */
+    .script-box {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: monospace;
+      font-size: 0.78rem; color: #a5b4fc;
+      line-height: 1.8;
+      position: relative;
+      margin-top: 8px;
+      display: none;
+    }
+    .script-box.visible { display: block; }
+    .copy-btn {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(99,102,241,0.15); color: #818cf8;
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 0.7rem; font-weight: 700;
+      font-family: var(--font); cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wizard">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <h2>SJKM NETWORK DATA LINK</h2>
+        <small>First-Run Setup Wizard</small>
+      </div>
+    </div>
+
+    <nav class="steps-nav">
+      <div class="step-nav-item active" id="dot1">
+        <div class="step-nav-num"><span class="step-nav-num-text">1</span></div>
+        <div><div class="step-nav-label">System Check</div><div class="step-nav-desc">Verify environment</div></div>
+      </div>
+      <div class="step-nav-item" id="dot2">
+        <div class="step-nav-num"><span class="step-nav-num-text">2</span></div>
+        <div><div class="step-nav-label">Your Branding</div><div class="step-nav-desc">Company details</div></div>
+      </div>
+      <div class="step-nav-item" id="dot3">
+        <div class="step-nav-num"><span class="step-nav-num-text">3</span></div>
+        <div><div class="step-nav-label">Internet Plans</div><div class="step-nav-desc">Add your packages</div></div>
+      </div>
+      <div class="step-nav-item" id="dot4">
+        <div class="step-nav-num"><span class="step-nav-num-text">4</span></div>
+        <div><div class="step-nav-label">Admin Account</div><div class="step-nav-desc">Secure access</div></div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      ✅ Your data stays local — nothing is uploaded to any cloud server.
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- ══ Step 1: System Check ══ -->
+    <div class="step-pane active" id="step1">
+      <div class="step-eyebrow">Step 1 of 4</div>
+      <div class="step-title">System Check</div>
+      <div class="step-desc">We're making sure your environment is ready. All checks should pass before proceeding.</div>
+
+      <div class="health-item">
+        <div class="health-dot" id="hNet"></div>
+        <div>
+          <div class="health-item-text">Internet Connectivity</div>
+          <div class="health-item-sub">Required for SMS alerts and email notifications</div>
+        </div>
+      </div>
+      <div class="health-item">
+        <div class="health-dot" id="hDb"></div>
+        <div>
+          <div class="health-item-text">Database Engine</div>
+          <div class="health-item-sub">SQLite is active — your data is stored locally</div>
+        </div>
+      </div>
+      <div class="health-item">
+        <div class="health-dot" id="hPort"></div>
+        <div>
+          <div class="health-item-text">Web Server</div>
+          <div class="health-item-sub">Port 3000 is running correctly</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <span></span>
+        <button class="btn btn-primary" onclick="goStep(2)">
+          Start Setup
+          <svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ Step 2: Branding ══ -->
+    <div class="step-pane" id="step2">
+      <div class="step-eyebrow">Step 2 of 4</div>
+      <div class="step-title">Your Brand</div>
+      <div class="step-desc">This information appears on the customer portal and all automated messages sent to your subscribers.</div>
+
+      <div class="form-grid-2">
+        <div class="field" style="grid-column:1/-1;">
+          <label>ISP / Company Name</label>
+          <input type="text" id="s2_name" placeholder="e.g. SJKM NETWORK DATA LINK Broadband">
+          <div class="field-note">This will appear on the customer portal and SMS messages.</div>
+        </div>
+        <div class="field">
+          <label>Contact Number</label>
+          <input type="text" id="s2_phone" placeholder="09XX-XXX-XXXX">
+        </div>
+        <div class="field">
+          <label>Support Email <span class="badge-optional">optional</span></label>
+          <input type="email" id="s2_email" placeholder="support@yourisp.com">
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Business Address <span class="badge-optional">optional</span></label>
+          <input type="text" id="s2_address" placeholder="e.g. Brgy. San Jose, Cabanatuan City, Nueva Ecija">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="validateStep2()">
+          Continue
+          <svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ Step 3: Internet Plans ══ -->
+    <div class="step-pane" id="step3">
+      <div class="step-eyebrow">Step 3 of 4</div>
+      <div class="step-title">Internet Plans</div>
+      <div class="step-desc">Add the internet packages you offer your subscribers. You can always add, edit, or remove plans later in Settings.</div>
+
+      <div id="s4_planList" style="margin-bottom:1rem;"></div>
+
+      <div style="background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:0.5rem;">
+        <div style="font-size:0.78rem; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:12px;">Add a Plan</div>
+        <div class="form-grid-2">
+          <div class="field" style="margin-bottom:0;">
+            <label>Plan Name</label>
+            <input type="text" id="s4_name" placeholder="e.g. Basic, Standard">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Speed</label>
+            <input type="text" id="s4_speed" placeholder="e.g. 10 Mbps">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Monthly Fee (₱)</label>
+            <input type="number" id="s4_price" placeholder="e.g. 999">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Profile Name</label>
+            <input type="text" id="s4_profile" placeholder="e.g. 10MBPS, Standard">
+            <div style="font-size:0.71rem; color:var(--muted); margin-top:5px;">Enter the matching PPPoE profile/plan name.</div>
+          </div>
+        </div>
+        <button class="btn btn-outline-green btn-sm" style="margin-top:12px;" onclick="addWizardPlan()">+ Add Plan</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="skip-link" onclick="goStep(4)">Skip — add plans later</button>
+          <button class="btn btn-primary" onclick="saveWizardPlans()">
+            Continue
+            <svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Step 4: Admin Account ══ -->
+    <div class="step-pane" id="step4">
+      <div class="step-eyebrow">Step 4 of 4</div>
+      <div class="step-title">Admin Account</div>
+      <div class="step-desc">Create your master administrator login. Keep these credentials safe — this is the only account with full system access.</div>
+
+      <div class="form-grid-2">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="s5_user" placeholder="e.g. admin" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="s5_name" placeholder="e.g. Juan Dela Cruz">
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="s5_pass" placeholder="Choose a strong password" autocomplete="new-password">
+            <button class="pass-toggle" type="button" onclick="togglePass('s5_pass',this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="field-note" id="s5_strength"></div>
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Confirm Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="s5_pass2" placeholder="Repeat your password" autocomplete="new-password">
+            <button class="pass-toggle" type="button" onclick="togglePass('s5_pass2',this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-result" id="s5_result"></div>
+
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="goStep(3)">← Back</button>
+        <button class="btn btn-primary" id="s5_finishBtn" onclick="finishSetup()">
+          🚀 Finish & Launch
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ Success Screen ══ -->
+    <div class="step-pane" id="step5">
+      <div class="success-screen">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="step-title">You're All Set! 🎉</div>
+        <div class="success-sub">Your ISP Management System is configured and ready. Here's a summary of what was set up:</div>
+        <div class="summary-chips" id="successChips"></div>
+        <button class="btn btn-primary" style="font-size:1rem; padding:14px 32px;" onclick="window.location.href='/admin/login.html'">
+          Go to Admin Login →
+        </button>
+        <div style="margin-top:12px; font-size:0.78rem; color:var(--muted);">Bookmark: <code style="color:#a5b4fc;">http://localhost:3000/admin/</code></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // ════════════════════════════════════
+  // State
+  // ════════════════════════════════════
+  let currentStep = 1;
+  let wizardPlans = [];
+
+  const TOTAL_STEPS = 4;
+
+  // ════════════════════════════════════
+  // Navigation
+  // ════════════════════════════════════
+  function goStep(n) {
+    document.getElementById(`step${currentStep}`).classList.remove('active');
+    const oldDot = document.getElementById(`dot${currentStep}`);
+    if (oldDot) { oldDot.classList.remove('active'); oldDot.classList.add('done'); }
+
+    currentStep = n;
+
+    document.getElementById(`step${currentStep}`).classList.add('active');
+    const newDot = document.getElementById(`dot${currentStep}`);
+    if (newDot) { newDot.classList.remove('done'); newDot.classList.add('active'); }
+
+    // Side effects per step
+    if (currentStep === 3) { renderWizardPlans(); }
+
+    window.scrollTo(0, 0);
+  }
+
+  // ════════════════════════════════════
+  // Step 1: Health Check
+  // ════════════════════════════════════
+  async function runHealthCheck() {
+    try {
+      const res = await fetch('/api/setup/health');
+      const data = await res.json();
+      setHealth('hNet',  data.network !== false);
+      setHealth('hDb',   data.db !== false);
+      setHealth('hPort', data.port !== false);
+    } catch(e) {
+      setHealth('hNet', false);
+      setHealth('hDb', true);
+      setHealth('hPort', true);
+    }
+  }
+
+  function setHealth(id, ok) {
+    const el = document.getElementById(id);
+    el.classList.remove('pulse');
+    el.classList.add(ok ? 'ok' : 'err');
+  }
+
+  runHealthCheck();
+
+  // ════════════════════════════════════
+  // Step 2: Branding Validation
+  // ════════════════════════════════════
+  function validateStep2() {
+    const name = document.getElementById('s2_name').value.trim();
+    if (!name) {
+      document.getElementById('s2_name').focus();
+      document.getElementById('s2_name').style.borderColor = 'var(--danger)';
+      return;
+    }
+    document.getElementById('s2_name').style.borderColor = '';
+    goStep(3);
+  }
+
+  // ════════════════════════════════════
+  // Step 3: MikroTik
+  // ════════════════════════════════════
+  async function startDiscovery() {
+    if (discoveryInterval) return;
+    const box = document.getElementById('s3_discoveryBox');
+
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/setup/discover');
+        const neighbors = await res.json();
+        if (neighbors.length === 0) {
+          box.innerHTML = `<div class="neighbor-row" style="cursor:default; justify-content:center; color:var(--muted); font-size:0.83rem; gap:0;">No routers detected automatically. Enter your IP manually below.</div>`;
+        } else {
+          box.innerHTML = neighbors.map(n => `
+            <div class="neighbor-row" onclick="selectNeighbor('${n.ip}')">
+              <div class="neighbor-row-info">
+                <h4>${n.identity || 'MikroTik Router'}</h4>
+                <span>${n.ip} • ${n.model || n.platform || 'MikroTik'} ${n.version ? '• v'+n.version : ''}</span>
+              </div>
+              <button class="neighbor-row-select">Select</button>
+            </div>
+          `).join('');
+        }
+      } catch(e) {
+        box.innerHTML = `<div class="neighbor-row" style="cursor:default; color:var(--muted); font-size:0.83rem;">Scan unavailable. Enter IP manually below.</div>`;
+      }
+    };
+    poll();
+    discoveryInterval = setInterval(poll, 4000);
+  }
+
+  function stopDiscovery() {
+    if (discoveryInterval) { clearInterval(discoveryInterval); discoveryInterval = null; }
+  }
+
+  function selectNeighbor(ip) {
+    document.getElementById('s3_host').value = ip;
+    document.getElementById('s3_host').focus();
+    showResult('s3_result', 'info', `✅ Selected ${ip} — now click "Test Connection" to verify.`);
+  }
+
+  async function testMikrotik() {
+    const btn = document.getElementById('s3_testBtn');
+    const host = document.getElementById('s3_host').value.trim();
+    const user = document.getElementById('s3_user').value.trim() || 'admin';
+    const pass = document.getElementById('s3_pass').value;
+
+    if (!host) {
+      showResult('s3_result', 'error', '❌ Please enter the Router IP Address.');
+      document.getElementById('s3_host').focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 0.8s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Testing...`;
+
+    try {
+      const res = await fetch('/api/setup/test-mikrotik', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host, user, password: pass })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showResult('s3_result', 'success', '🟢 Connected successfully! Your MikroTik router is ready.');
+        mikrotikVerified = true;
+        document.getElementById('s3_nextBtn').disabled = false;
+      } else {
+        const script = `/ip service enable api\n/ip service set api port=8728\n/user add name=${user} password=${pass || 'your_password'} group=full comment="ISP Monitor"`;
+        showResult('s3_result', 'error', `❌ ${data.error || 'Connection failed.'} — Is the API service enabled? Copy the script above and paste it into WinBox Terminal.`);
+        document.getElementById('apiScript').textContent = script;
+        document.getElementById('apiScript').classList.add('visible');
+      }
+    } catch(e) {
+      showResult('s3_result', 'error', '❌ Could not reach server. Make sure the system is running.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Test Connection`;
+    }
+  }
+
+  function copyScript() {
+    const box = document.getElementById('apiScript');
+    const text = box.innerText.replace('Copy','').trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = box.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  // ════════════════════════════════════
+  // Step 4: Fetch MikroTik Profiles
+  // ════════════════════════════════════
+  let wizardProfilesLoaded = false;
+
+  async function fetchWizardProfiles() {
+    if (wizardProfilesLoaded) return; // Only fetch once
+    const wrap = document.getElementById('s4_profileWrap');
+    if (!wrap) return;
+
+    const host = document.getElementById('s3_host').value.trim();
+    const user = document.getElementById('s3_user').value.trim() || 'admin';
+    const pass = document.getElementById('s3_pass').value;
+
+    // Show loading state
+    wrap.innerHTML = `<input type="text" id="s4_profile" placeholder="Fetching profiles from ${host || 'router'}..." disabled style="opacity:0.5;cursor:not-allowed;">`;
+
+    if (!host) {
+      // No host entered in step 3 — show text input
+      renderProfileManual('');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/setup/mikrotik-profiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host, user, password: pass })
+      });
+      const data = await res.json();
+
+      if (data.success && data.profiles.length) {
+        // ✅ Show live dropdown
+        wizardProfilesLoaded = true;
+        wrap.innerHTML = `
+          <div style="display:flex; gap:8px; align-items:stretch;">
+            <select id="s4_profile" style="flex:1; background:rgba(0,0,0,0.3); border:1.5px solid rgba(255,255,255,0.09); border-radius:12px; color:var(--text); padding:12px 16px; font-family:var(--font); font-size:0.93rem; cursor:pointer;">
+              <option value="">-- Select PPP Profile --</option>
+              ${data.profiles.map(p => `<option value="${p}">${p}</option>`).join('')}
+            </select>
+            <button type="button" onclick="renderProfileManual(document.getElementById('s4_profile').value)" 
+              style="flex-shrink:0; padding:0 14px; background:rgba(255,255,255,0.05); border:1.5px solid rgba(255,255,255,0.09); border-radius:12px; color:var(--muted); cursor:pointer; font-size:0.75rem; font-family:var(--font); white-space:nowrap;">✏️ Type</button>
+          </div>
+          <div style="font-size:0.71rem; color:var(--success); margin-top:5px;">🟢 ${data.profiles.length} profiles fetched live from ${host}</div>
+        `;
+      } else {
+        // ⚠️ Offline fallback with common defaults preloaded
+        renderProfileManual('', data.profiles);
+      }
+    } catch(e) {
+      renderProfileManual('');
+    }
+  }
+
+  function renderProfileManual(currentVal, suggestions) {
+    const wrap = document.getElementById('s4_profileWrap');
+    if (!wrap) return;
+    const list = suggestions && suggestions.length
+      ? `<datalist id="profileSuggestions">${suggestions.map(p => `<option value="${p}">`).join('')}</datalist>`
+      : '';
+    const listAttr = suggestions && suggestions.length ? 'list="profileSuggestions"' : '';
+    wrap.innerHTML = `
+      ${list}
+      <input type="text" id="s4_profile" ${listAttr}
+        value="${currentVal || ''}"
+        placeholder="e.g. 10MBPS, fiber_plan, PLDT-10M"
+        style="width:100%; background:rgba(0,0,0,0.3); border:1.5px solid rgba(245,158,11,0.35); border-radius:12px; color:var(--text); padding:12px 16px; font-family:var(--font); font-size:0.93rem;">
+      <div style="font-size:0.71rem; color:var(--warning); margin-top:5px;">⚠️ Type the exact PPP Profile name from WinBox → PPP → Profiles tab.</div>
+    `;
+  }
+
+  // ════════════════════════════════════
+  // Step 4: Internet Plans
+  // ════════════════════════════════════
+  function addWizardPlan() {
+    const name    = document.getElementById('s4_name').value.trim();
+    const speed   = document.getElementById('s4_speed').value.trim();
+    const price   = document.getElementById('s4_price').value.trim();
+    const profileEl = document.getElementById('s4_profile');
+    const profile = profileEl ? profileEl.value.trim() : '';
+
+    if (!name || !price) {
+      document.getElementById('s4_name').style.borderColor = !name ? 'var(--danger)' : '';
+      document.getElementById('s4_price').style.borderColor = !price ? 'var(--danger)' : '';
+      return;
+    }
+
+    wizardPlans.push({
+      id: 'plan_' + Date.now(),
+      name, speed, price: Number(price),
+      mikrotik_profile: profile || name.replace(/\s+/g,'').toUpperCase()
+    });
+
+    // Clear fields
+    ['s4_name','s4_speed','s4_price'].forEach(id => {
+      document.getElementById(id).value = '';
+      document.getElementById(id).style.borderColor = '';
+    });
+    // Reset profile dropdown/input (keep it loaded, just clear selection)
+    if (profileEl) profileEl.value = profileEl.tagName === 'SELECT' ? '' : '';
+
+    renderWizardPlans();
+  }
+
+  function renderWizardPlans() {
+    const container = document.getElementById('s4_planList');
+    if (wizardPlans.length === 0) {
+      container.innerHTML = `<div style="color:var(--muted); font-size:0.83rem; padding:8px 0 4px; text-align:center;">No plans added yet. Add at least one below.</div>`;
+      return;
+    }
+    container.innerHTML = `
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:10px; margin-bottom:12px;">
+        ${wizardPlans.map((p,i) => `
+          <div style="background:rgba(99,102,241,0.08); border:1.5px solid rgba(99,102,241,0.2); border-radius:12px; padding:14px; position:relative;">
+            <button onclick="removePlan(${i})" style="position:absolute;top:8px;right:8px;background:rgba(239,68,68,0.1);border:none;color:#ef4444;border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;">×</button>
+            <div style="font-weight:800; font-size:0.9rem;">${p.name}</div>
+            <div style="font-size:0.75rem; color:var(--muted); margin:2px 0 6px;">${p.speed || '—'}</div>
+            <div style="font-size:1.1rem; font-weight:900; color:var(--accent);">₱${Number(p.price).toLocaleString()}<span style="font-size:0.7rem; font-weight:400; color:var(--muted);">/mo</span></div>
+            <div style="font-size:0.65rem; color:var(--muted); margin-top:4px;">Profile: ${p.mikrotik_profile}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function removePlan(i) {
+    wizardPlans.splice(i, 1);
+    renderWizardPlans();
+  }
+
+  async function saveWizardPlans() {
+    if (wizardPlans.length === 0) { goStep(4); return; }
+    try {
+      for (const plan of wizardPlans) {
+        await fetch('/api/admin/plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(plan)
+        });
+      }
+    } catch(e) {}
+    goStep(4);
+  }
+
+  // ════════════════════════════════════
+  // Step 5: Admin Account
+  // ════════════════════════════════════
+  document.getElementById('s5_pass').addEventListener('input', function() {
+    const v = this.value;
+    let strength = 0, label = '';
+    if (v.length >= 8) strength++;
+    if (/[A-Z]/.test(v)) strength++;
+    if (/[0-9]/.test(v)) strength++;
+    if (/[^A-Za-z0-9]/.test(v)) strength++;
+    const colors  = ['','var(--danger)','var(--warning)','var(--warning)','var(--success)'];
+    const labels  = ['','Weak — too short','Fair — add a number or uppercase','Good — almost there!','Strong ✅'];
+    document.getElementById('s5_strength').textContent = v ? labels[strength] : '';
+    document.getElementById('s5_strength').style.color = v ? colors[strength] : '';
+  });
+
+  async function finishSetup() {
+    const user  = document.getElementById('s5_user').value.trim();
+    const pass  = document.getElementById('s5_pass').value;
+    const pass2 = document.getElementById('s5_pass2').value;
+    const name  = document.getElementById('s5_name').value.trim();
+
+    if (!user || !pass) {
+      showResult('s5_result', 'error', '❌ Username and password are required.');
+      return;
+    }
+    if (pass !== pass2) {
+      showResult('s5_result', 'error', '❌ Passwords do not match.');
+      return;
+    }
+    if (pass.length < 6) {
+      showResult('s5_result', 'error', '❌ Password must be at least 6 characters.');
+      return;
+    }
+
+    const btn = document.getElementById('s5_finishBtn');
+    btn.disabled = true;
+    btn.textContent = 'Setting up...';
+
+    const payload = {
+      isp_name:      document.getElementById('s2_name').value.trim(),
+      support_email: document.getElementById('s2_email').value.trim(),
+      support_phone: document.getElementById('s2_phone').value.trim(),
+      support_address: document.getElementById('s2_address').value.trim(),
+      mt_host:    '',
+      mt_user:    'admin',
+      mt_pass:    '',
+      smtp_user:  '',
+      smtp_pass:  '',
+      admin_user: user,
+      admin_pass: pass,
+      admin_name: name || user,
+    };
+
+    try {
+      const res = await fetch('/api/setup/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        buildSuccessChips(payload);
+        goStep(5);
+        // Hide sidebar nav dots for success screen
+        document.querySelectorAll('.step-nav-item').forEach(el => el.classList.add('done'));
+      } else {
+        showResult('s5_result', 'error', '❌ ' + (data.error || 'Setup failed. Please try again.'));
+      }
+    } catch(e) {
+      showResult('s5_result', 'error', '❌ Could not reach server.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🚀 Finish & Launch';
+    }
+  }
+
+  function buildSuccessChips(p) {
+    const chips = [];
+    chips.push(`<div class="chip green">✅ ${p.isp_name}</div>`);
+    chips.push(`<div class="chip indigo">👤 Admin: ${p.admin_user}</div>`);
+    if (wizardPlans.length)  chips.push(`<div class="chip indigo">📋 ${wizardPlans.length} internet plan${wizardPlans.length>1?'s':''} added</div>`);
+    document.getElementById('successChips').innerHTML = chips.join('');
+  }
+
+  // ════════════════════════════════════
+  // Helpers
+  // ════════════════════════════════════
+  function showResult(id, type, msg) {
+    const el = document.getElementById(id);
+    el.className = `test-result ${type}`;
+    el.textContent = msg;
+  }
+
+  function togglePass(id, btn) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+</script>
+</body>
+</html>

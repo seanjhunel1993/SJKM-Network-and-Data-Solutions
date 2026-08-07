@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Logs | SJKM NETWORK DATA LINK</title>
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        .log-container {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 25px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 300px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .filter-select {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .log-table-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 250px);
+        }
+
+        .log-table-wrapper {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .log-table th {
+            padding: 18px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            border-bottom: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.95);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .log-table td {
+            padding: 18px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        .log-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-billing { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-reminder { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-system { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+        .badge-void { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .timestamp {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .details-json {
+            font-size: 12px;
+            color: #94a3b8;
+            max-width: 400px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: help;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body class="admin-body">
+    <div id="sidebar-placeholder"></div>
+
+    <main class="main-content">
+        <div class="log-container">
+            <div class="log-header">
+                <div>
+                    <h1 class="page-title">Event Logs</h1>
+                    <p class="page-subtitle">Real-time system activity & audit trail</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-clear" onclick="confirmClearLogs()" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                        Clear History
+                    </button>
+                    <button class="btn-refresh" onclick="fetchLogs()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                        Refresh Logs
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <input type="text" id="logSearch" class="search-box" placeholder="Search actions, clients, or admins..." oninput="fetchLogs()">
+                </div>
+                <div class="filter-group">
+                    <select id="categoryFilter" class="filter-select" onchange="fetchLogs()">
+                        <option value="">All Categories</option>
+                        <option value="Billing">Billing</option>
+                        <option value="Reminder">Reminders</option>
+                        <option value="System">System</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="dateFilterType" class="filter-select" onchange="toggleDatePicker()">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="custom">Custom Date</option>
+                    </select>
+                </div>
+                <div class="filter-group" id="customDateContainer" style="display: none;">
+                    <input type="date" id="customDatePicker" class="filter-select" onchange="fetchLogs()">
+                </div>
+            </div>
+
+            <div class="log-table-container">
+                <div class="log-table-wrapper">
+                    <table class="log-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Category</th>
+                                <th>Action</th>
+                                <th>Admin</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logBody">
+                            <!-- Logs will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="logLoader" class="loader">
+                    <div class="spinner"></div>
+                    <p>Fetching activity logs...</p>
+                </div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 15px; opacity: 0.5;">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
+                    </svg>
+                    <p>No activity logs found for the selected filters.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin.js"></script>
+    <script>
+        function toggleDatePicker() {
+            const type = document.getElementById('dateFilterType').value;
+            const container = document.getElementById('customDateContainer');
+            container.style.display = type === 'custom' ? 'block' : 'none';
+            fetchLogs();
+        }
+
+        async function confirmClearLogs() {
+            if (window.showCustomConfirm) {
+                window.showCustomConfirm('🗑️ Clear Audit Log', 'Are you sure you want to permanently delete all activity logs? This action cannot be undone.', async () => {
+                    await clearLogs();
+                });
+            } else {
+                if (confirm('Are you sure you want to clear all logs?')) {
+                    await clearLogs();
+                }
+            }
+        }
+
+        async function clearLogs() {
+            try {
+                const res = await fetch('/api/admin/activity-logs/clear', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    fetchLogs();
+                } else {
+                    alert(data.error);
+                }
+            } catch (err) {
+                console.error('Clear failed:', err);
+            }
+        }
+
+        async function fetchLogs() {
+            const search = document.getElementById('logSearch').value;
+            const category = document.getElementById('categoryFilter').value;
+            const dateType = document.getElementById('dateFilterType').value;
+            const customDate = document.getElementById('customDatePicker').value;
+
+            let dateFilter = dateType;
+            if (dateType === 'custom') dateFilter = customDate;
+
+            const logBody = document.getElementById('logBody');
+            const loader = document.getElementById('logLoader');
+            const emptyState = document.getElementById('emptyState');
+
+            loader.style.display = 'block';
+            logBody.style.opacity = '0.3';
+
+            try {
+                const response = await fetch(`/api/admin/activity-logs?category=${category}&search=${encodeURIComponent(search)}&dateFilter=${dateFilter}`);
+                const logs = await response.json();
+
+                loader.style.display = 'none';
+                logBody.style.opacity = '1';
+
+                if (!logs || logs.length === 0) {
+                    logBody.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                logBody.innerHTML = logs.map(log => {
+                    let detailsHtml = '';
+                    try {
+                        const details = JSON.parse(log.details);
+                        detailsHtml = Object.entries(details)
+                            .map(([k, v]) => {
+                                let label = k.replace('_', ' ').toUpperCase();
+                                let value = v;
+                                if (k.includes('amount')) value = `₱${Number(v).toLocaleString()}`;
+                                return `<div style="display:inline-block; margin-right:15px; font-size:12px;">
+                                            <span style="color:#64748b; font-weight:600; font-size:10px;">${label}:</span> 
+                                            <span style="color:#e2e8f0;">${value}</span>
+                                        </div>`;
+                            })
+                            .join('');
+                    } catch (e) {
+                        detailsHtml = `<span style="color:#94a3b8;">${log.details}</span>`;
+                    }
+
+                    // --- Smart Icons & Colors ---
+                    let icon = '📝';
+                    let actionColor = '#f1f5f9';
+                    const actionLower = log.action.toLowerCase();
+                    
+                    if (actionLower.includes('payment recorded')) { icon = '💳'; actionColor = '#10b981'; }
+                    else if (actionLower.includes('void')) { icon = '🗑️'; actionColor = '#ef4444'; }
+                    else if (actionLower.includes('broadcast')) { icon = '🚀'; actionColor = '#8b5cf6'; }
+                    else if (actionLower.includes('reminder')) { icon = '🔔'; actionColor = '#3b82f6'; }
+
+                    const categoryClass = `badge-${log.category.toLowerCase()}`;
+                    
+                    // --- Relative Time Logic ---
+                    const date = new Date(log.timestamp);
+                    const now = new Date();
+                    const diff = Math.floor((now - date) / 1000);
+                    let timeStr = '';
+                    if (diff < 60) timeStr = 'Just now';
+                    else if (diff < 3600) timeStr = `${Math.floor(diff/60)}m ago`;
+                    else if (diff < 86400) timeStr = `${Math.floor(diff/3600)}h ago`;
+                    else timeStr = date.toLocaleDateString();
+
+                    return `
+                        <tr>
+                            <td>
+                                <div class="timestamp" title="${date.toLocaleString()}">${timeStr}</div>
+                                <div style="font-size:10px; color:#475569;">${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                            </td>
+                            <td><span class="badge ${categoryClass}">${log.category}</span></td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <span style="font-size:18px;">${icon}</span>
+                                    <div>
+                                        <div style="font-weight: 600; color: ${actionColor}; font-size:15px;">${log.action}</div>
+                                        <div style="font-size:12px; color:#64748b;">Action performed by Admin</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <div style="width:24px; height:24px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; color:white; font-weight:bold;">
+                                        ${log.admin_name.charAt(0)}
+                                    </div>
+                                    <span style="font-weight:500;">${log.admin_name}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="background:rgba(255,255,255,0.03); padding:10px 15px; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                                    ${detailsHtml}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error('Failed to fetch logs:', err);
+                loader.style.display = 'none';
+                logBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ef4444;">Error loading logs. Please try again.</td></tr>';
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            if (window.loadSidebar) window.loadSidebar();
+            fetchLogs();
+            // Refresh logs every 30 seconds
+            setInterval(fetchLogs, 30000);
+            
+            // Real-time relative time update every 60 seconds
+            setInterval(() => {
+                const timestamps = document.querySelectorAll('.timestamp');
+                timestamps.forEach(ts => {
+                    const date = new Date(ts.getAttribute('title'));
+                    const now = new Date();
+                    const diff = Math.floor((now - date) / 1000);
+                    let timeStr = '';
+                    if (diff < 60) timeStr = 'Just now';
+                    else if (diff < 3600) timeStr = `${Math.floor(diff/60)}m ago`;
+                    else if (diff < 86400) timeStr = `${Math.floor(diff/3600)}h ago`;
+                    else timeStr = date.toLocaleDateString();
+                    ts.textContent = timeStr;
+                });
+            }, 60000);
+        });
+    </script>
+</body>
+</html>

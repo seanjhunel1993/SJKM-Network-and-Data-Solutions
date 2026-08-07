@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "C:\\Users\\Administrator\\Desktop\\SJKM Network and Data Solutions\\routes\\logs\\.3dd4c083d8fe18fcf602f16cd451ff2bd677cc60-audit.json",
+    "files": [
+        {
+            "date": 1785682384794,
+            "name": "C:\\Users\\Administrator\\Desktop\\SJKM Network and Data Solutions\\routes\\logs\\error-2026-08-02.log",
+            "hash": "ecfd2b615893de108c7aab7525d7b69e42ce2a91321a4d5d7f64d1cfe24717f8"
+        }
+    ],
+    "hashType": "sha256"
+}

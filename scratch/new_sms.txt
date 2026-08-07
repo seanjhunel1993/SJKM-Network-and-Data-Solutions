@@ -1,0 +1,6 @@
+          const isPartial = remainingBalance > 0;
+          const financialLine = isPartial 
+            ? `Rem. Bal: P${Number(remainingBalance).toLocaleString()}` 
+            : (currentWallet > 0 ? `Advance Credit: P${Number(currentWallet).toLocaleString()}` : '');
+            
+          const smsMsg = `OFFICIAL RECEIPT\n------------------\nHi ${client.full_name}!\nAmount: P${Number(proof.amount).toLocaleString()}\nStatus: ${isPartial ? 'PARTIAL PAYMENT' : 'FULLY PAID'}\nDue Date: ${prettyDue}${financialLine ? '\n' : ''}${financialLine}\n------------------\nThank you for your payment!`;

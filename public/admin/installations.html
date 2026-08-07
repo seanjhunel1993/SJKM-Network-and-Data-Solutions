@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Installation Records | SJKM NETWORK DATA LINK Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    :root {
+      --bg-deep: #0a0b0f;
+      --bg-card: rgba(17, 18, 23, 0.8);
+      --accent: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #ffffff;
+      --text-dim: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    body {
+      background-color: var(--bg-deep);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-main);
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    .metric-card .icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      font-size: 1.2rem;
+    }
+
+    .metric-card .label { 
+      color: var(--text-dim); 
+      font-size: 0.7rem; 
+      font-weight: 700;
+      text-transform: uppercase; 
+      letter-spacing: 1px;
+    }
+    
+    .metric-card .value { 
+      font-size: 1.75rem; 
+      font-weight: 800; 
+      font-family: 'Outfit', sans-serif;
+      letter-spacing: -0.5px;
+    }
+
+    /* Gradient accents for cards */
+    .card-total { border-bottom: 4px solid var(--accent); }
+    .card-total .icon-box { background: rgba(99, 102, 241, 0.15); color: var(--accent); }
+    
+    .card-paid { border-bottom: 4px solid var(--success); }
+    .card-paid .icon-box { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    
+    .card-pending { border-bottom: 4px solid var(--warning); }
+    .card-pending .icon-box { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+    .content-container {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      margin-top: 30px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+
+    .toolbar {
+      padding: 24px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      max-width: 400px;
+    }
+    
+    .search-wrapper input {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      padding: 12px 16px 12px 42px;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    
+    .search-wrapper input:focus {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .search-wrapper i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    .filter-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.03);
+      padding: 6px 16px;
+      border-radius: 30px;
+      border: 1px solid var(--border);
+    }
+
+    /* Modern Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255,255,255,0.1);
+      transition: .4s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px; width: 14px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--success); }
+    input:checked + .slider:before { transform: translateX(16px); }
+
+    .premium-table { width: 100%; border-collapse: collapse; }
+    .premium-table th {
+      padding: 18px 24px;
+      background: rgba(255,255,255,0.01);
+      color: var(--text-dim);
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .premium-table tr { transition: background 0.2s; }
+    .premium-table tr:hover { background: rgba(255,255,255,0.02); }
+    .premium-table td {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .client-info { display: flex; flex-direction: column; gap: 4px; }
+    .client-name { font-weight: 700; color: #fff; font-size: 1rem; }
+    .client-id { color: var(--text-dim); font-size: 0.75rem; font-family: monospace; }
+
+    .amount-cell { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.05rem; }
+    .amount-due { color: #fff; }
+    .amount-paid { color: var(--success); }
+    .amount-balance { color: var(--danger); }
+    .amount-settled { color: var(--text-dim); opacity: 0.6; }
+
+    .status-chip {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-block;
+    }
+    .status-paid { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .status-partial { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+    .status-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+
+    .action-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .empty-state {
+      padding: 80px 40px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    .empty-state .icon { font-size: 3rem; opacity: 0.2; }
+    .empty-state .text { color: var(--text-dim); font-size: 1rem; font-weight: 500; }
+
+    .select-minimal {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+      padding-right: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-placeholder"></div>
+
+  <div class="mobile-header">
+    <button class="hamburger" id="menuToggle"><span></span><span></span><span></span></button>
+    <h1><span class="brand-text">SJKM NETWORK DATA LINK</span> <small>Installs</small></h1>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="main-content">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
+      <div>
+        <h1 style="font-family:'Outfit', sans-serif; font-size:2.5rem; font-weight:900; letter-spacing:-1.5px; margin:0;">Installation Records</h1>
+        <p style="color: var(--text-dim); margin-top: 5px; font-size: 1.05rem;">Complete financial oversight for client setup fees</p>
+      </div>
+      
+      <div class="filter-pill">
+        <svg style="width:16px; height:16px; color:var(--text-dim);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        <select id="filterMonth" class="select-minimal">
+          <option value="all">Full Year</option>
+          <option value="01">January</option>
+          <option value="02">February</option>
+          <option value="03">March</option>
+          <option value="04">April</option>
+          <option value="05">May</option>
+          <option value="06">June</option>
+          <option value="07">July</option>
+          <option value="08">August</option>
+          <option value="09">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+        <div style="width:1px; height:15px; background:var(--border);"></div>
+        <select id="filterYear" class="select-minimal"></select>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+        <!-- Total Collected Card -->
+        <div class="stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%); border: 1px solid rgba(16, 185, 129, 0.2); height: 160px; display: flex; flex-direction: column; justify-content: center; padding: 0 40px; border-radius: 16px;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981; width: 64px; height: 64px; border-radius: 18px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 32px; height: 32px;"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                </div>
+                <div>
+                    <div style="font-size: 0.85rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Total Collected</div>
+                    <div id="statCollected" class="value" style="font-size: 2.2rem; font-weight: 900; color: #fff; letter-spacing: -1px;">₱0.00</div>
+                    <div id="lifetimeSubtext" style="font-size: 0.75rem; color: #10b981; font-weight: 700; margin-top: 4px; opacity: 0.8;">In selected period</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Outstanding Balance Card -->
+        <div class="stat-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%); border: 1px solid rgba(245, 158, 11, 0.2); height: 160px; display: flex; flex-direction: column; justify-content: center; padding: 0 40px; border-radius: 16px;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; width: 64px; height: 64px; border-radius: 18px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 32px; height: 32px;"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <div style="font-size: 0.85rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Outstanding Balance</div>
+                    <div id="statBalance" class="value" style="font-size: 2.2rem; font-weight: 900; color: #fff; letter-spacing: -1px;">₱0.00</div>
+                    <div style="font-size: 0.75rem; color: #f59e0b; font-weight: 700; margin-top: 4px; opacity: 0.8;">Total unpaid setup fees</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-container">
+      <div class="toolbar">
+        <div class="search-wrapper">
+          <svg style="width:18px; height:18px; position:absolute; left:14px; top:12px; color:var(--text-dim);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" id="searchInput" placeholder="Search by name or account ID...">
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-dim);">Hide Settled (Legacy)</span>
+          <label class="switch">
+            <input type="checkbox" id="hideZeroToggle" onchange="toggleHideZero()">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div style="overflow-x: auto;">
+        <table class="premium-table">
+          <thead>
+            <tr>
+              <th>Client / Account</th>
+              <th>Service Plan</th>
+              <th>Setup Fee</th>
+              <th>Total Paid</th>
+              <th>Balance</th>
+              <th>Status</th>
+              <th style="text-align:right">Management</th>
+            </tr>
+          </thead>
+          <tbody id="installTbody">
+            <tr><td colspan="7" style="text-align:center; padding:100px;"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="admin.js"></script>
+  <script>
+    let globalInstalls = [];
+    let hideZero = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const yearSelect = document.getElementById('filterYear');
+      const curYear = new Date().getFullYear();
+      for(let y = curYear; y >= 2024; y--) {
+          const opt = document.createElement('option');
+          opt.value = y; opt.textContent = y;
+          yearSelect.appendChild(opt);
+      }
+
+      const curMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+      document.getElementById('filterMonth').value = curMonth;
+
+      loadInstallations();
+
+      document.getElementById('searchInput').addEventListener('input', applyFilters);
+      document.getElementById('filterMonth').addEventListener('change', applyFilters);
+      document.getElementById('filterYear').addEventListener('change', applyFilters);
+    });
+
+    async function loadInstallations() {
+      try {
+        const res = await fetch('/api/admin/installations');
+        const data = await res.json();
+        globalInstalls = data;
+        applyFilters();
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    function toggleHideZero() {
+        hideZero = document.getElementById('hideZeroToggle').checked;
+        applyFilters();
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const month = document.getElementById('filterMonth').value;
+      const year = document.getElementById('filterYear').value;
+
+      const filtered = globalInstalls.filter(item => {
+        const matchSearch = item.full_name.toLowerCase().includes(q) || item.account_id.toLowerCase().includes(q);
+        if(!matchSearch) return false;
+        if(hideZero && item.amount_due === 0) return false;
+        return true;
+      });
+
+      renderTable(filtered, month, year);
+    }
+
+    function renderTable(data, filterMonth, filterYear) {
+      let totalFees = 0, totalPaidPeriod = 0, totalPending = 0, totalPaidLifetime = 0;
+      
+      if (data.length === 0) {
+          document.getElementById('installTbody').innerHTML = `
+            <tr><td colspan="7">
+                <div class="empty-state">
+                    <div class="icon">🔍</div>
+                    <div class="text">No installation records found matching your search.</div>
+                </div>
+            </td></tr>
+          `;
+          updateMetrics(0, 0, 0, 0, filterMonth);
+          return;
+      }
+
+      const html = data.map(item => {
+        const matchesDate = (filterMonth === 'all') 
+            ? (!item.paid_date || item.paid_date.startsWith(filterYear))
+            : (item.paid_date && item.paid_date.startsWith(`${filterYear}-${filterMonth}`));
+
+        if (matchesDate) {
+            totalPaidPeriod += item.amount_paid;
+        }
+        
+        totalPaidLifetime += item.amount_paid;
+        totalFees += item.amount_due;
+        totalPending += item.balance;
+
+        const statusClass = item.status === 'Paid' ? 'status-paid' : (item.status === 'Partial' ? 'status-partial' : 'status-pending');
+        const balanceClass = item.balance > 0 ? 'amount-balance' : 'amount-settled';
+
+        return `
+          <tr>
+            <td>
+              <div class="client-info">
+                <span class="client-name">${item.full_name}</span>
+                <span class="client-id">${item.account_id}</span>
+              </div>
+            </td>
+            <td><span style="font-size:0.75rem; color:var(--text-dim); font-weight:600;">${item.plan}</span></td>
+            <td class="amount-cell amount-due">₱${item.amount_due.toLocaleString()}</td>
+            <td class="amount-cell amount-paid">₱${item.amount_paid.toLocaleString()}</td>
+            <td class="amount-cell ${balanceClass}">₱${item.balance.toLocaleString()}</td>
+            <td><span class="status-chip ${statusClass}">${item.status}</span></td>
+            <td style="text-align:right;">
+              <button class="action-btn" onclick="openUpdateModal(${item.id})">
+                <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                Manage
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('installTbody').innerHTML = html;
+      updateMetrics(totalFees, totalPaidPeriod, totalPending, totalPaidLifetime, filterMonth);
+    }
+
+    function updateMetrics(f, p, pe, pl, month) {
+      document.getElementById('statCollected').textContent = '₱' + p.toLocaleString(undefined, {minimumFractionDigits:2});
+      document.getElementById('statBalance').textContent = '₱' + pe.toLocaleString(undefined, {minimumFractionDigits:2});
+      
+      const subtext = document.getElementById('lifetimeSubtext');
+      if (month === 'all') {
+          subtext.innerHTML = `<span style="opacity:0.6">Total collections for year</span>`;
+      } else {
+          subtext.innerHTML = `<span style="opacity:0.6">₱${pl.toLocaleString()} lifetime collected</span>`;
+      }
+    }
+
+    function openUpdateModal(clientId) {
+      const client = globalInstalls.find(c => c.id === clientId);
+      if(!client) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      const currentPaidDate = client.paid_date || today;
+      
+      const initials = client.full_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+      const html = `
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-top:10px;">
+            <div style="display:flex; justify-content:center; margin-bottom:20px;">
+                <div style="width:60px; height:60px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:900; font-family:'Outfit'; color:#fff; box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);">
+                    ${initials}
+                </div>
+            </div>
+            <form id="updateInstallForm" style="display:flex; flex-direction:column; gap:20px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                <div class="input-group">
+                  <label style="display:block; font-size:0.7rem; font-weight:800; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px;">Installation Fee (₱)</label>
+                  <input type="number" id="installDue" value="${client.amount_due}" class="search-wrapper input" style="width:100%; box-sizing:border-box; padding:12px 15px; border-radius:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:#fff;" required>
+                </div>
+                <div class="input-group">
+                  <label style="display:block; font-size:0.7rem; font-weight:800; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px;">Total Paid (₱)</label>
+                  <input type="number" id="installPaid" value="${client.amount_paid}" class="search-wrapper input" style="width:100%; box-sizing:border-box; padding:12px 15px; border-radius:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:#fff;" required>
+                </div>
+              </div>
+              <div class="input-group">
+                <label style="display:block; font-size:0.7rem; font-weight:800; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px;">Official Payment Date</label>
+                <input type="date" id="installDate" value="${currentPaidDate}" class="search-wrapper input" style="width:100%; box-sizing:border-box; padding:12px 15px; border-radius:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:#fff;">
+              </div>
+              <div class="input-group">
+                <label style="display:block; font-size:0.7rem; font-weight:800; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px;">Internal Remarks</label>
+                <textarea id="installRemarks" class="search-wrapper input" style="width:100%; box-sizing:border-box; padding:12px 15px; border-radius:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:#fff; min-height:80px; resize:none;" placeholder="Notes about payment method, reference numbers, etc.">${client.remarks}</textarea>
+              </div>
+            </form>
+        </div>
+      `;
+
+      window.showPremiumModal({
+        title: 'Manage Record: ' + client.full_name,
+        text: 'Adjust installation billing terms and verify payment status.',
+        html,
+        buttons: [
+          { text: 'Discard Changes', type: 'secondary', onClick: () => window.closePremiumModal() },
+          { text: 'Confirm & Save', type: 'primary', onClick: async () => {
+              const due = parseFloat(document.getElementById('installDue').value) || 0;
+              const paid = parseFloat(document.getElementById('installPaid').value) || 0;
+              const date = document.getElementById('installDate').value;
+              const remarks = document.getElementById('installRemarks').value;
+              
+              try {
+                const res = await fetch('/api/admin/installations/update', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ client_id: clientId, amount_due: due, amount_paid: paid, remarks, paid_date: date })
+                });
+                if(res.ok) {
+                  window.closePremiumModal();
+                  loadInstallations();
+                  window.showCustomAlert('Update Successful', 'The client ledger has been updated.', false);
+                }
+              } catch(e) {
+                alert('Connection error.');
+              }
+          }}
+        ]
+      });
+    }
+  </script>
+</body>
+</html>

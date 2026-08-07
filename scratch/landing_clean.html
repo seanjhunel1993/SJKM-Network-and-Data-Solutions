@@ -1,0 +1,285 @@
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+    &lt;title&gt;SJKM NETWORK DATA LINK — High-Speed Internet&lt;/title&gt;
+    &lt;link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"&gt;
+    &lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"&gt;
+    &lt;style&gt;
+        :root { --primary:#8e09fb; --primary-dark:#8e09fb; --accent:#378b64; --ink:#0b1f3a; --muted:#5b6b85; --bg:#f4f8ff; --border:#e2e9f5; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { font-family:'Inter',sans-serif; color:var(--ink); background:#fff; line-height:1.6; }
+        a { text-decoration:none; color:inherit; }
+        img { max-width:100%; }
+        .container { max-width:1140px; margin:0 auto; padding:0 24px; }
+        .btn { display:inline-flex; align-items:center; gap:8px; padding:11px 22px; border-radius:10px; font-weight:600; font-size:14px; transition:.15s; cursor:pointer; border:none; }
+        .btn-primary { background:var(--primary); color:#fff; } .btn-primary:hover { background:var(--primary-dark); }
+        .btn-light { background:#fff; color:var(--primary); } .btn-light:hover { background:#eef4ff; }
+        .btn-ghost { background:transparent; color:var(--ink); border:1.5px solid var(--border); } .btn-ghost:hover { border-color:var(--primary); color:var(--primary); }
+
+        header.site { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); }
+        .nav { display:flex; align-items:center; justify-content:space-between; height:70px; gap:16px; }
+        .brand { display:flex; align-items:center; gap:11px; font-weight:800; font-size:18px; min-width:0; }
+        .brand img { height:42px; width:auto; object-fit:contain; }
+        .brand .bname { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px; }
+        .menu { display:flex; align-items:center; gap:26px; }
+        .menu a.link { font-size:14px; font-weight:600; color:var(--muted); } .menu a.link:hover { color:var(--primary); }
+        .nav-cta { display:flex; gap:10px; align-items:center; }
+        .hamburger { display:none; background:none; border:none; font-size:22px; color:var(--ink); cursor:pointer; padding:6px; line-height:1; }
+        .nav-login-mobile { display:none; }
+        .nav-paybills-mobile { display:none; }
+
+        .hero { background:linear-gradient(135deg,#247bff,#1763d6 55%,#8bff3d); color:#fff; padding:80px 0 90px; position:relative; overflow:hidden; }
+        .hero::after { content:''; position:absolute; right:-120px; top:-120px; width:420px; height:420px; border-radius:50%; background:rgba(255,255,255,.08); }
+        .hero-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; position:relative; z-index:1; }
+        .hero h1 { font-size:clamp(32px,4.6vw,50px); font-weight:900; line-height:1.08; letter-spacing:-.02em; margin-bottom:16px; }
+        .hero p { font-size:17px; opacity:.92; max-width:520px; margin-bottom:26px; }
+        .hero-actions { display:flex; gap:12px; flex-wrap:wrap; }
+        .hero-illus { text-align:center; font-size:170px; opacity:.92; }
+        .chips { display:flex; gap:14px; flex-wrap:wrap; margin-top:30px; }
+        .chip { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); padding:9px 14px; border-radius:99px; font-size:13px; font-weight:600; }
+
+        section { padding:74px 0; }
+        .section-head { text-align:center; max-width:640px; margin:0 auto 46px; }
+        .eyebrow { color:var(--primary); font-weight:800; font-size:13px; letter-spacing:.08em; text-transform:uppercase; }
+        .section-head h2 { font-size:clamp(26px,3.4vw,36px); font-weight:800; letter-spacing:-.02em; margin:8px 0 12px; }
+        .section-head p { color:var(--muted); font-size:16px; }
+
+        .about { background:var(--bg); }
+        .about-grid { display:grid; grid-template-columns:.9fr 1.1fr; gap:44px; align-items:center; }
+        .about-art { background:linear-gradient(135deg,var(--primary),var(--accent)); border-radius:20px; min-height:280px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:120px; overflow:hidden; }
+        .hero-illus img { max-width:100%; max-height:360px; object-fit:contain; }
+        .about-art img { display:block; width:100%; height:280px; object-fit:cover; }
+        .about h2 { font-size:clamp(24px,3vw,32px); font-weight:800; margin-bottom:14px; }
+        .about p { color:var(--muted); margin-bottom:18px; }
+        .about ul { list-style:none; display:flex; flex-direction:column; gap:12px; }
+        .about li { display:flex; gap:11px; align-items:flex-start; font-weight:600; font-size:14.5px; }
+        .about li i { color:var(--primary); margin-top:3px; }
+
+        .features { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+        .feature { background:#fff; border:1px solid var(--border); border-radius:16px; padding:28px 24px; transition:.15s; }
+        .feature:hover { transform:translateY(-4px); box-shadow:0 16px 36px rgba(23,99,214,.12); border-color:rgba(23,99,214,.35); }
+        .feature .ico { width:54px; height:54px; border-radius:14px; background:linear-gradient(135deg,var(--primary),var(--accent)); color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:16px; }
+        .feature h3 { font-size:17px; font-weight:700; margin-bottom:6px; }
+        .feature p { font-size:14px; color:var(--muted); }
+
+        .pricing-wrap { background:var(--bg); }
+        .plans { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:22px; align-items:stretch; }
+        .plan { background:#fff; border:1px solid var(--border); border-radius:18px; padding:30px 26px; display:flex; flex-direction:column; text-align:center; }
+        .plan.featured { border:2px solid var(--primary); box-shadow:0 18px 44px rgba(23,99,214,.18); position:relative; }
+        .plan.featured::before { content:'POPULAR'; position:absolute; top:14px; right:14px; background:var(--primary); color:#fff; font-size:10px; font-weight:800; letter-spacing:.06em; padding:4px 10px; border-radius:99px; }
+        .plan .speed { font-size:24px; font-weight:900; color:var(--primary); }
+        .plan .pdesc { font-size:13px; color:var(--muted); margin:4px 0 16px; min-height:20px; }
+        .plan .price { font-size:42px; font-weight:900; letter-spacing:-.02em; } .plan .price small { font-size:14px; font-weight:600; color:var(--muted); }
+        .plan ul { list-style:none; margin:20px 0 24px; display:flex; flex-direction:column; gap:11px; flex:1; text-align:left; }
+        .plan li { display:flex; gap:10px; align-items:flex-start; font-size:14px; }
+        .plan li i { color:#16a34a; margin-top:3px; }
+
+        .contact { }
+        .contact-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+        .ccard { background:#fff; border:1px solid var(--border); border-radius:16px; padding:28px 24px; text-align:center; }
+        .ccard .ico { width:54px; height:54px; border-radius:50%; background:#eef4ff; color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:21px; margin:0 auto 14px; }
+        .ccard h4 { font-size:15px; margin-bottom:6px; }
+        .ccard p { font-size:14px; color:var(--muted); word-break:break-word; }
+
+        footer.site { background:var(--ink); color:#aebed6; padding:56px 0 26px; }
+        .foot-grid { display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:36px; }
+        .foot-brand { display:flex; align-items:center; gap:11px; color:#fff; font-weight:800; font-size:18px; margin-bottom:14px; }
+        .foot-brand img { height:40px; object-fit:contain; }
+        .foot-social { display:flex; gap:10px; margin:2px 0 14px; }
+        .foot-social a { width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,.08); color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; transition:.15s; }
+        .foot-social a:hover { background:var(--accent); }
+        .foot p { font-size:13.5px; line-height:1.7; }
+        .foot h5 { color:#fff; font-size:14px; margin-bottom:14px; text-transform:uppercase; letter-spacing:.05em; }
+        .foot ul { list-style:none; display:flex; flex-direction:column; gap:9px; }
+        .foot ul a { font-size:13.5px; } .foot ul a:hover { color:#fff; }
+        .foot-contact div { display:flex; gap:10px; align-items:flex-start; font-size:13.5px; margin-bottom:10px; }
+        .foot-contact i { color:var(--accent); margin-top:4px; }
+        .copyright { text-align:center; margin-top:36px; padding-top:22px; border-top:1px solid rgba(255,255,255,.1); font-size:13px; color:#7f93b3; }
+
+        @media (max-width:900px){ .hero-grid,.about-grid{ grid-template-columns:1fr; } .hero-illus,.about-art{ display:none; } .features,.contact-grid{ grid-template-columns:1fr 1fr; } .foot-grid{ grid-template-columns:1fr; } }
+        @media (max-width:640px){
+            .menu { position:absolute; top:100%; left:0; right:0; display:none; flex-direction:column; align-items:stretch; gap:0; background:#fff; border-bottom:1px solid var(--border); box-shadow:0 14px 26px rgba(15,23,42,.1); padding:8px 0; }
+            .menu.open { display:flex; }
+            .menu a.link { padding:13px 24px; }
+            .nav-login-desktop { display:none; }
+            .nav-login-mobile { display:block; margin:10px 24px 6px; }
+            .hamburger { display:inline-flex; align-items:center; }
+            .nav-paybills-mobile { display:inline-flex; padding:8px 14px; font-size:13px; }
+            .features,.contact-grid{ grid-template-columns:1fr; }
+        }
+        /* Dark mode (tenant landing page) */
+        body.dark { background:#0b1220; --ink:#e6edf7; --muted:#9fb0c9; --bg:#0d1526; --border:#22304a; }
+        body.dark header.site { background:rgba(11,18,32,.9); }
+        body.dark .hero { background:#0b1220; }
+        body.dark .hero::after { display:none; }
+        body.dark .feature, body.dark .plan, body.dark .ccard { background:#111b30; }
+        body.dark .feature:hover { box-shadow:0 16px 36px rgba(0,0,0,.45); border-color:rgba(255,255,255,.14); }
+        body.dark .btn-light { background:#111b30; color:#fff; } body.dark .btn-light:hover { background:#1a2540; }
+        body.dark .btn-ghost { color:var(--ink); }
+        body.dark .ccard .ico { background:#1a2540; }
+        body.dark footer.site { background:#070c16; }
+        body.dark .menu { background:#0d1526; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body class="dark"&gt;
+
+&lt;header class="site"&gt;
+    &lt;div class="container nav"&gt;
+        &lt;a href="#top" class="brand"&gt;
+            &lt;img src="https://sjkmdatalink.isproph.com/storage/company/sjkm-data-link-bUVlA3/sidebar_1785149072.png" alt="SJKM NETWORK DATA LINK"&gt;        &lt;/a&gt;
+        &lt;nav class="menu" id="navMenu"&gt;
+            &lt;a href="#top" class="link"&gt;Home&lt;/a&gt;
+            &lt;a href="#pricing" class="link"&gt;Plans&lt;/a&gt;
+            &lt;a href="#contact" class="link"&gt;Contact&lt;/a&gt;
+            &lt;a href="https://sjkmdatalink.isproph.com/bills" class="link"&gt;Bills&lt;/a&gt;
+            &lt;a href="https://sjkmdatalink.isproph.com/speedtest" class="link"&gt;Speed Test&lt;/a&gt;            &lt;a href="https://sjkmdatalink.isproph.com/login" class="btn btn-primary nav-login-mobile"&gt;Login&lt;/a&gt;
+        &lt;/nav&gt;
+        &lt;div class="nav-cta"&gt;
+            &lt;a href="https://sjkmdatalink.isproph.com/login" class="btn btn-primary nav-login-desktop"&gt;Login&lt;/a&gt;
+            &lt;a href="https://sjkmdatalink.isproph.com/bills" class="btn btn-primary nav-paybills-mobile"&gt;&lt;i class="fas fa-file-invoice-dollar"&gt;&lt;/i&gt; Pay Bills&lt;/a&gt;
+            &lt;button type="button" class="hamburger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Toggle menu"&gt;&lt;i class="fas fa-bars"&gt;&lt;/i&gt;&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/header&gt;
+
+&lt;section class="hero" id="top"&gt;
+    &lt;div class="container hero-grid"&gt;
+        &lt;div&gt;
+            &lt;h1&gt; Better High-Speed&lt;br&gt;Internet Connection &lt;/h1&gt;
+            &lt;p&gt;SJKM NETWORK DATA LINK delivers fast and reliable unlimited internet for your home and business.&lt;/p&gt;
+            &lt;div class="hero-actions"&gt;
+                &lt;a href="#contact" class="btn btn-light"&gt;&lt;i class="fas fa-headset"&gt;&lt;/i&gt; Contact Us&lt;/a&gt;
+                &lt;a href="#pricing" class="btn" style="background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3)"&gt;&lt;i class="fas fa-tags"&gt;&lt;/i&gt; View Plans&lt;/a&gt;
+            &lt;/div&gt;
+            &lt;div class="chips"&gt;
+                &lt;span class="chip"&gt;&lt;i class="fas fa-shield-halved"&gt;&lt;/i&gt; 99.9% Uptime&lt;/span&gt;
+                &lt;span class="chip"&gt;&lt;i class="fas fa-headset"&gt;&lt;/i&gt; 24/7 Support&lt;/span&gt;
+                &lt;span class="chip"&gt;&lt;i class="fas fa-gauge-high"&gt;&lt;/i&gt; High Speed&lt;/span&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="hero-illus"&gt;&lt;img src="https://sjkmdatalink.isproph.com/storage/company/sjkm-data-link-bUVlA3/hero_1785944331.png" alt="SJKM NETWORK DATA LINK"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;section class="about" id="about"&gt;
+    &lt;div class="container about-grid"&gt;
+        &lt;div class="about-art"&gt;&lt;i class="fas fa-wifi"&gt;&lt;/i&gt;&lt;/div&gt;
+        &lt;div class="about"&gt;
+            &lt;div class="eyebrow"&gt;Who we are?&lt;/div&gt;
+            &lt;h2&gt;Fast &amp; reliable internet for everyone&lt;/h2&gt;
+            &lt;p&gt;SJKM NETWORK DATA LINK is an Internet Service Provider that provides fast and reliable unlimited internet connection for your Home and Business.&lt;/p&gt;
+            &lt;ul&gt;
+                                                &lt;li&gt;&lt;i class="fas fa-circle-check"&gt;&lt;/i&gt; Fast and reliable connection&lt;/li&gt;
+                                &lt;li&gt;&lt;i class="fas fa-circle-check"&gt;&lt;/i&gt; Unlimited data, no hidden caps&lt;/li&gt;
+                                &lt;li&gt;&lt;i class="fas fa-circle-check"&gt;&lt;/i&gt; Friendly, responsive support team&lt;/li&gt;
+                            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;section id="why"&gt;
+    &lt;div class="container"&gt;
+        &lt;div class="section-head"&gt;
+            &lt;div class="eyebrow"&gt;Why Choose Us&lt;/div&gt;
+            &lt;h2&gt;Everything you'd want from your ISP&lt;/h2&gt;
+            &lt;p&gt;Built to keep you connected with speed, reliability, and great service.&lt;/p&gt;
+        &lt;/div&gt;
+        &lt;div class="features"&gt;
+                        &lt;div class="feature"&gt;
+                &lt;div class="ico"&gt;&lt;i class="fas fa-bolt"&gt;&lt;/i&gt;&lt;/div&gt;
+                &lt;h3&gt;Fast and Reliable&lt;/h3&gt;
+                &lt;p&gt;A stable, high-speed connection built for work, study, and play.&lt;/p&gt;
+            &lt;/div&gt;
+                        &lt;div class="feature"&gt;
+                &lt;div class="ico"&gt;&lt;i class="fas fa-headset"&gt;&lt;/i&gt;&lt;/div&gt;
+                &lt;h3&gt;Quick Support&lt;/h3&gt;
+                &lt;p&gt;Our team is ready to assist you whenever you need help.&lt;/p&gt;
+            &lt;/div&gt;
+                        &lt;div class="feature"&gt;
+                &lt;div class="ico"&gt;&lt;i class="fas fa-infinity"&gt;&lt;/i&gt;&lt;/div&gt;
+                &lt;h3&gt;Unlimited&lt;/h3&gt;
+                &lt;p&gt;No data caps — browse, stream, and download without limits.&lt;/p&gt;
+            &lt;/div&gt;
+                        &lt;div class="feature"&gt;
+                &lt;div class="ico"&gt;&lt;i class="fas fa-map-marked-alt"&gt;&lt;/i&gt;&lt;/div&gt;
+                &lt;h3&gt;Wide Coverage Area&lt;/h3&gt;
+                &lt;p&gt;Expanding coverage to bring fast internet closer to you.&lt;/p&gt;
+            &lt;/div&gt;
+                        &lt;div class="feature"&gt;
+                &lt;div class="ico"&gt;&lt;i class="fas fa-file-invoice-dollar"&gt;&lt;/i&gt;&lt;/div&gt;
+                &lt;h3&gt;Easy Online Billing&lt;/h3&gt;
+                &lt;p&gt;View and pay your bills anytime through our online portal.&lt;/p&gt;
+            &lt;/div&gt;
+                        &lt;div class="feature"&gt;
+                &lt;div class="ico"&gt;&lt;i class="fas fa-screwdriver-wrench"&gt;&lt;/i&gt;&lt;/div&gt;
+                &lt;h3&gt;Quick Installation&lt;/h3&gt;
+                &lt;p&gt;Get connected fast with our efficient installation process.&lt;/p&gt;
+            &lt;/div&gt;
+                    &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;section id="pricing" class="pricing-wrap"&gt;
+    &lt;div class="container"&gt;
+        &lt;div class="section-head"&gt;
+            &lt;div class="eyebrow"&gt;Our Plans&lt;/div&gt;
+            &lt;h2&gt;Simple, affordable pricing&lt;/h2&gt;
+            &lt;p&gt;Choose the speed that fits your home or business. No hidden fees.&lt;/p&gt;
+        &lt;/div&gt;
+                    &lt;div style="text-align:center;color:var(--muted)"&gt;Plans coming soon. Contact us for current offers.&lt;/div&gt;
+            &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;section id="contact" class="contact"&gt;
+    &lt;div class="container"&gt;
+        &lt;div class="section-head"&gt;
+            &lt;div class="eyebrow"&gt;Get in touch&lt;/div&gt;
+            &lt;h2&gt;Ready to get connected?&lt;/h2&gt;
+            &lt;p&gt;Reach out and our team will help you apply or answer any questions.&lt;/p&gt;
+        &lt;/div&gt;
+        &lt;div class="contact-grid"&gt;
+                        &lt;div class="ccard"&gt;&lt;div class="ico"&gt;&lt;i class="fas fa-location-dot"&gt;&lt;/i&gt;&lt;/div&gt;&lt;h4&gt;Visit Us&lt;/h4&gt;&lt;p&gt;Zone 4 Centro San Vicente Ogbon
+San Vicnte Ogbun Nabua cam Sur&lt;/p&gt;&lt;/div&gt;
+                                    &lt;div class="ccard"&gt;&lt;div class="ico"&gt;&lt;i class="fas fa-phone"&gt;&lt;/i&gt;&lt;/div&gt;&lt;h4&gt;Call / Text&lt;/h4&gt;&lt;p&gt;&lt;a href="tel:+639383346242"&gt;+639383346242&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;
+                                    &lt;div class="ccard"&gt;&lt;div class="ico"&gt;&lt;i class="fas fa-envelope"&gt;&lt;/i&gt;&lt;/div&gt;&lt;h4&gt;Email Us&lt;/h4&gt;&lt;p&gt;&lt;a href="/cdn-cgi/l/email-protection#93e0fae7e0fcffe6e7fafcfde0aba7d3f4fef2faffbdf0fcfe"&gt;&lt;span class="__cf_email__" data-cfemail="7c0f15080f131009081513120f44483c1b111d1510521f1311"&gt;[email&#160;protected]&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;
+                    &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;footer class="site"&gt;
+    &lt;div class="container"&gt;
+        &lt;div class="foot-grid"&gt;
+            &lt;div&gt;
+                &lt;div class="foot-brand"&gt;
+                    &lt;img src="https://sjkmdatalink.isproph.com/storage/company/sjkm-data-link-bUVlA3/sidebar_1785149072.png" alt="SJKM NETWORK DATA LINK"&gt;                &lt;/div&gt;
+                                &lt;p&gt;Fast and reliable unlimited internet connection for your home and business.&lt;/p&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+                &lt;h5&gt;Quick Links&lt;/h5&gt;
+                &lt;ul&gt;
+                    &lt;li&gt;&lt;a href="#top"&gt;Home&lt;/a&gt;&lt;/li&gt;
+                    &lt;li&gt;&lt;a href="#pricing"&gt;Plans&lt;/a&gt;&lt;/li&gt;
+                    &lt;li&gt;&lt;a href="#contact"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+                    &lt;li&gt;&lt;a href="https://sjkmdatalink.isproph.com/bills"&gt;View Bills&lt;/a&gt;&lt;/li&gt;
+                    &lt;li&gt;&lt;a href="https://sjkmdatalink.isproph.com/speedtest"&gt;Speed Test&lt;/a&gt;&lt;/li&gt;                &lt;/ul&gt;
+            &lt;/div&gt;
+            &lt;div class="foot-contact"&gt;
+                &lt;h5&gt;Contact&lt;/h5&gt;
+                &lt;div&gt;&lt;i class="fas fa-location-dot"&gt;&lt;/i&gt; &lt;span&gt;Zone 4 Centro San Vicente Ogbon
+San Vicnte Ogbun Nabua cam Sur&lt;/span&gt;&lt;/div&gt;                &lt;div&gt;&lt;i class="fas fa-phone"&gt;&lt;/i&gt; &lt;span&gt;+639383346242&lt;/span&gt;&lt;/div&gt;                &lt;div&gt;&lt;i class="fas fa-envelope"&gt;&lt;/i&gt; &lt;span&gt;&lt;a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9be8f2efe8f4f7eeeff2f4f5e8a3afdbfcf6faf2f7b5f8f4f6"&gt;[email&#160;protected]&lt;/a&gt;&lt;/span&gt;&lt;/div&gt;            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="copyright"&gt;&copy; 2026 SJKM NETWORK DATA LINK. All rights reserved.&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/footer&gt;
+&lt;script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"&gt;&lt;/script&gt;&lt;script&gt;
+(function(){
+    var menu = document.getElementById('navMenu');
+    if (!menu) return;
+    menu.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ menu.classList.remove('open'); }); });
+})();
+&lt;/script&gt;
+&lt;script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"e7665574ff0044a49a7a36b25472e233","r":1}' crossorigin="anonymous"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
